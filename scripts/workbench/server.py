@@ -362,10 +362,23 @@ def main():
     ap.add_argument('--port', type=int, default=8765)
     ap.add_argument('--no-browser', action='store_true')
     a = ap.parse_args()
-    ROOT = os.path.abspath(a.root)
+    ROOT = os.path.abspath(a.root.strip().strip('"').rstrip('\\/') or '.')   # bat 里 "%~dp0" 末尾的 \" 会多出引号
     os.makedirs(os.path.join(ROOT, '项目'), exist_ok=True)
-    srv = ThreadingHTTPServer(('127.0.0.1', a.port), H)
     url = f'http://127.0.0.1:{a.port}'
+    try:                                   # 已有工作台在运行 → 直接打开浏览器（Windows 允许端口复用，不能靠绑定失败判断）
+        import urllib.request
+        urllib.request.urlopen(url + '/api', timeout=1.5)
+        print(f'工作台已经在运行（{url}），直接打开浏览器。')
+        if not a.no_browser:
+            webbrowser.open(url)
+        return
+    except Exception:
+        pass
+    ThreadingHTTPServer.allow_reuse_address = False
+    try:
+        srv = ThreadingHTTPServer(('127.0.0.1', a.port), H)
+    except OSError:
+        sys.exit(f'端口 {a.port} 被别的程序占用，可以加参数 --port 8766 换一个端口')
     print(f'Sysmac 迁移工作台已启动：{url}\n工作目录：{ROOT}\n接口清单：{url}/api\n关闭本窗口即停止。', flush=True)
     if not a.no_browser:
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
