@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Sysmac 迁移工作台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#f3f4f1; --panel:#ffffff; --ink:#1d2321; --mute:#6b7470; --line:#dfe2dc;
+  --accent:#0f6e63; --accent-2:#e6f2ef; --warn:#b5651d; --warn-bg:#fdf1e4; --bad:#b3261e; --bad-bg:#fbe9e7;
+  --ok:#2e7d32; --ok-bg:#e8f5e9; --blue:#1f5fa8; --blue-bg:#e8f0fb; --yel-bg:#fff7d6;
+  --mono:"Cascadia Mono","Consolas","Microsoft YaHei Mono",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;color:var(--ink);background:var(--bg);display:flex;height:100vh;overflow:hidden}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:#fff}
+/* 侧栏 */
+#side{width:300px;flex:none;background:#18201e;color:#e8ece9;display:flex;flex-direction:column;overflow:auto}
+#side h1{font-size:16px;margin:0;padding:18px 18px 4px;letter-spacing:.5px}
+#side .sub{padding:0 18px 14px;color:#9aa6a1;font-size:12px;border-bottom:1px solid #2a3431}
+#side .sect{padding:14px 18px 6px;color:#9aa6a1;font-size:12px}
+#projects{padding:0 10px}
+.proj{padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;color:#d6dcd9}
+.proj:hover{background:#232d2a}.proj.on{background:#0f6e63;color:#fff}
+.newp{display:flex;gap:6px;padding:8px 18px}
+.newp input{flex:1;background:#232d2a;border-color:#33403c;color:#fff}
+.newp button{background:#232d2a;border-color:#33403c;color:#fff}
+.step{margin:8px 12px;padding:12px;border:1px solid #2a3431;border-radius:8px;background:#1e2826}
+.step .t{display:flex;align-items:center;gap:8px;font-weight:600}
+.step .n{width:22px;height:22px;border-radius:50%;background:#33403c;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.step.done .n{background:var(--accent)}
+.step p{margin:6px 0 8px;color:#9aa6a1;font-size:12px}
+.step button{width:100%;margin-top:4px;background:#2a3431;border-color:#3b4844;color:#e8ece9}
+.step button.primary{background:var(--accent);border-color:var(--accent)}
+.step .info{font-size:12px;color:#c9d2ce;word-break:break-all}
+/* 主区 */
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#top{padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+#top .title{font-size:18px;font-weight:600}
+.cards{display:flex;gap:10px;flex-wrap:wrap}
+.card{border:1px solid var(--line);border-radius:8px;padding:6px 12px;background:#fafbf9;min-width:84px}
+.card b{display:block;font-size:18px}.card span{font-size:12px;color:var(--mute)}
+.card.warn b{color:var(--warn)}.card.bad b{color:var(--bad)}.card.ok b{color:var(--ok)}
+#tabs{display:flex;gap:2px;padding:0 22px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--mute);white-space:nowrap}
+.tab.on{color:var(--accent);border-color:var(--accent);font-weight:600}
+.tab .badge{font-size:11px;background:var(--line);border-radius:9px;padding:0 6px;margin-left:4px;color:var(--ink)}
+#view{flex:1;overflow:auto;padding:16px 22px}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.toolbar .hint{color:var(--mute);font-size:12px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#f7f8f6;z-index:1;font-weight:600;white-space:nowrap}
+tr:hover td{background:#fafcfb}
+td.st{white-space:nowrap}
+td.code{font-family:var(--mono);font-size:12px}
+td input{width:100%;min-width:110px;padding:3px 6px}
+td input.saved{border-color:var(--ok);background:var(--ok-bg)}
+.pill{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px}
+.p-bad{background:var(--bad-bg);color:var(--bad)}.p-warn{background:var(--warn-bg);color:var(--warn)}
+.p-ok{background:var(--ok-bg);color:var(--ok)}.p-blue{background:var(--blue-bg);color:var(--blue)}.p-new{background:#e6f4ea;color:#1b6b33}
+.empty{color:var(--mute);padding:40px;text-align:center}
+/* 程序段 */
+.secwrap{display:flex;gap:14px;height:100%}
+.seclist{width:240px;flex:none;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto}
+.seclist div{padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px}
+.seclist div.on{background:var(--accent-2);color:var(--accent);font-weight:600}
+.code{flex:1;display:flex;gap:10px;min-width:0}
+.pane{flex:1;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto;min-width:0}
+.pane h4{margin:0;padding:8px 12px;border-bottom:1px solid var(--line);background:#f7f8f6;position:sticky;top:0}
+pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.6}
+pre .l{display:block;padding:0 12px;white-space:pre}
+pre .l.chg{background:var(--blue-bg)} pre .l.cmt{background:#f1f1f1;color:#888} pre .l.add{background:#e6f4ea}
+pre .l.en{background:var(--yel-bg)} pre .l.blk{background:#22302c;color:#cfe;font-weight:600}
+.legend{display:flex;gap:10px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-2px}
+#log{position:fixed;right:18px;bottom:18px;width:520px;max-height:46vh;background:#101614;color:#cfe;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;flex-direction:column}
+#log header{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #26302d}
+#log pre{padding:8px 12px;overflow:auto;white-space:pre-wrap}
+#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#18201e;color:#fff;padding:8px 16px;border-radius:8px;display:none;z-index:9}
+.md{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 22px;max-width:980px}
+.md h1,.md h2{border-bottom:1px solid var(--line);padding-bottom:4px}
+.md code{background:#f2f3f0;padding:0 4px;border-radius:3px;font-family:var(--mono)}
+.paste{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 20px;max-width:880px}
+.paste ol li{margin:10px 0}
+</style>
+</head>
+<body>
+<aside id="side">
+  <h1>Sysmac 迁移工作台</h1>
+  <div class="sub">旧程序 + 新图纸 → 新程序段</div>
+  <div class="sect">项目</div>
+  <div id="projects"></div>
+  <div class="newp"><input id="newname" placeholder="新项目名"><button onclick="newProject()">新建</button></div>
+  <div id="steps"></div>
+</aside>
+<main id="main">
+  <div id="top"><div class="title" id="ptitle">请选择或新建项目</div><div class="cards" id="cards"></div></div>
+  <div id="tabs"></div>
+  <div id="view"><div class="empty">左侧选择项目，按 ①→④ 操作</div></div>
+</main>
+<div id="log"><header><span id="logtitle">任务</span><span><button onclick="hideLog()">关闭</button></span></header><pre id="logtext"></pre></div>
+<div id="toast"></div>
+<script>
+let P=null, ST=null, TAB='overview', cache={}, polling=null, secCur=null, showOld=true;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(path,opt={}){
+  const r=await fetch(path,opt); const j=await r.json().catch(()=>({error:'返回不是 JSON'}));
+  if(!r.ok) throw new Error(j.error||j.log||('HTTP '+r.status)); return j;
+}
+const post=(path,obj)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj||{})});
+function toast(t,ms=2500){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms)}
+
+async function loadProjects(){
+  let ps; try{ps=await api('/api/projects')}catch(e){toast('加载项目失败，2 秒后重试：'+e.message);setTimeout(loadProjects,2000);return}
+  $('#projects').innerHTML=ps.map(p=>`<div class="proj ${P===p.name?'on':''}" onclick="selectProject('${esc(p.name)}')"><span>${esc(p.name)}</span><span>${p.has_output?'✓':''}</span></div>`).join('')||'<div class="sub">还没有项目</div>';
+  if(!P&&ps.length) selectProject(ps[0].name);
+}
+async function newProject(){
+  const n=$('#newname').value.trim(); if(!n) return toast('先输入项目名');
+  await post('/api/projects',{name:n}); $('#newname').value=''; P=n; await loadProjects(); selectProject(n);
+}
+async function selectProject(n){P=n;cache={};secCur=null;await refresh();loadProjects()}
+async function refresh(){
+  if(!P) return; ST=await api(`/api/p/${enc(P)}/status`);
+  $('#ptitle').textContent=P; renderSteps(); renderCards(); renderTabs(); renderView();
+  if(ST.job&&ST.job.running) watchJob();
+}
+const enc=encodeURIComponent;
+function renderSteps(){
+  const j=ST.job||{}, c=ST.counts||{};
+  const s1=ST.old_sections>0, s2=!!ST.pdf, s3=ST.has_output;
+  $('#steps').innerHTML=`
+  <div class="sect">步骤</div>
+  <div class="step ${s1?'done':''}"><div class="t"><span class="n">1</span>读取旧程序</div>
+    <p>在 Sysmac 左侧 POUs 里多选所有 Input/Output 刷新程序段 → 右键「选择并复制多个项目」，然后点：</p>
+    <div class="info">${s1?`已读取 ${ST.old_sections} 个程序段`:''}</div>
+    <button class="${s1?'':'primary'}" onclick="readClip()">从剪贴板读取</button></div>
+  <div class="step ${s2?'done':''}"><div class="t"><span class="n">2</span>新图纸 PDF</div>
+    <p>CAD 导出的 PDF（文字可选中）。</p>
+    <div class="info">${s2?esc(ST.pdf.split(/[\\/]/).pop()):''}</div>
+    <input type="file" id="pdffile" accept=".pdf" style="display:none" onchange="uploadPdf(this)">
+    <button class="${s2?'':'primary'}" onclick="$('#pdffile').click()">${s2?'更换图纸':'选择图纸'}</button></div>
+  <div class="step ${s3?'done':''}"><div class="t"><span class="n">3</span>对点并生成</div>
+    <p>提取点表 → 对点 → 生成新程序段 → 清算。改了判断后点「重新生成」即可（不重读图纸）。</p>
+    <div class="info">${j.running?('进行中：'+esc(j.step)):(j.rc===0?'上次完成':(j.rc?'上次失败，看日志':''))}</div>
+    <button class="primary" ${(!s1||!s2||j.running)?'disabled':''} onclick="runAll(true)">对点并生成（含读图）</button>
+    <button ${(!s3||j.running)?'disabled':''} onclick="runAll(false)">重新生成（用已有点表）</button></div>
+  <div class="step"><div class="t"><span class="n">4</span>粘贴回 Sysmac</div>
+    <p>顺序：I/O 映射 → 新增变量 → 程序段。复制别的东西会覆盖剪贴板。</p>
+    <button ${s3?'':'disabled'} onclick="setTab('paste')">打开粘贴向导</button></div>
+  <div class="step"><div class="t">其他</div>
+    <button onclick="post('/api/p/'+enc(P)+'/open_folder')">打开输出文件夹</button>
+    <button onclick="setTab('rules')">迁移原则</button>
+    <button onclick="window.open('/api','_blank')">AI 接口清单</button></div>`;
+}
+function renderCards(){
+  const c=ST.counts||{}, r=c['对点结果']||{}, a=c['清算分类']||{}, ch=c['改动分类']||{};
+  const sum=(o,pre)=>Object.entries(o).filter(([k])=>k.startsWith(pre)).reduce((x,[,v])=>x+v,0);
+  if(!ST.has_output){$('#cards').innerHTML='';return}
+  const items=[
+    ['图纸点',Object.values(r).reduce((x,y)=>x+y,0),''],
+    ['改线号',ch['改线号']||0,''],['注释掉',ch['注释掉']||0,''],['新增行',ch['新增']||0,''],['启用',ch['启用']||0,''],
+    ['新建变量',c['新增变量']||0,''],
+    ['待判断',c['待判断']||0,(c['待判断']?'warn':'ok')],
+    ['❌ 对点',sum(r,'❌'),sum(r,'❌')?'bad':'ok'],
+    ['清算问题',c['清算']||0,(c['清算']?'warn':'ok')],
+    ['已存判断',ST.feedback||0,''],
+  ];
+  $('#cards').innerHTML=items.map(([k,v,cl])=>`<div class="card ${cl}"><b>${v}</b><span>${k}</span></div>`).join('');
+}
+const TABS=[['overview','概览'],['results','对点结果'],['doubts','图纸疑点'],['questions','待判断'],['audit','清算报告'],
+  ['sections','程序段'],['newvars','新增变量'],['iomap','IO映射'],['changes','变更清单'],['extra','程序有图纸无'],['paste','粘贴向导'],['rules','迁移原则']];
+function renderTabs(){
+  const c=ST.counts||{};
+  const b={questions:c['待判断'],audit:c['清算'],newvars:c['新增变量']};
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<div class="tab ${TAB===k?'on':''}" onclick="setTab('${k}')">${l}${b[k]?`<span class="badge">${b[k]}</span>`:''}</div>`).join('');
+}
+function setTab(k){TAB=k;renderTabs();renderView()}
+function pill(s){s=String(s);const c=s.startsWith('❌')||s.startsWith('❓')?'p-bad':s.startsWith('⚠')?'p-warn':s.startsWith('✅')?'p-ok':s.startsWith('🔀')?'p-blue':s.startsWith('🆕')?'p-new':'';return `<span class="pill ${c}">${esc(s)}</span>`}
+
+async function renderView(){
+  const v=$('#view');
+  if(!P){return}
+  if(TAB==='overview') return renderOverview();
+  if(TAB==='sections') return renderSections();
+  if(TAB==='paste') return renderPaste();
+  if(TAB==='rules'){const r=await api('/api/rules');v.innerHTML=`<div class="md">${md(r.markdown)}</div>`;return}
+  if(!ST.has_output){v.innerHTML='<div class="empty">还没有生成结果，先完成左侧 ①②③</div>';return}
+  v.innerHTML='<div class="empty">加载中…</div>';
+  const t=cache[TAB]||(cache[TAB]=await api(`/api/p/${enc(P)}/table/${TAB}`));
+  renderTable(t);
+}
+function renderOverview(){
+  const c=ST.counts||{};
+  const blk=(title,o)=>o&&Object.keys(o).length?`<h3>${title}</h3><table>${Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<tr><td>${pill(k)}</td><td style="width:80px">${n}</td></tr>`).join('')}</table>`:'';
+  $('#view').innerHTML=ST.has_output?`<div style="max-width:900px">
+    <p class="toolbar hint">报告文件：${esc(ST.report||'')}　·　项目目录：${esc(ST.dir)}</p>
+    ${blk('改动',c['改动分类'])}${blk('清算（需要看的）',c['清算分类'])}${blk('对点结果',c['对点结果'])}</div>`
+    :'<div class="empty">按左侧 ① 读旧程序 → ② 选图纸 → ③ 对点并生成</div>';
+}
+let FILTER={q:'',st:'',limit:400};
+function renderTable(t){
+  const cols=t.columns, rows=t.rows;
+  if(!cols.length){$('#view').innerHTML='<div class="empty">没有数据</div>';return}
+  const stIdx=0, edit=TAB==='results';
+  const ci=n=>cols.indexOf(n);
+  const sts=[...new Set(rows.map(r=>r[stIdx]))].sort();
+  const q=FILTER.q.toLowerCase();
+  const fr=rows.filter(r=>(!FILTER.st||r[stIdx]===FILTER.st)&&(!q||r.join(' ').toLowerCase().includes(q)));
+  const show=fr.slice(0,FILTER.limit);
+  const iomap=TAB==='iomap';
+  $('#view').innerHTML=`<div class="toolbar">
+    <input placeholder="搜索线号/功能/变量…" value="${esc(FILTER.q)}" oninput="FILTER.q=this.value;FILTER.limit=400;renderTable(cache[TAB])" style="width:260px">
+    <select onchange="FILTER.st=this.value;renderTable(cache[TAB])"><option value="">全部（${rows.length}）</option>${sts.map(s=>`<option ${s===FILTER.st?'selected':''} value="${esc(s)}">${esc(s)}（${rows.filter(r=>r[stIdx]===s).length}）</option>`).join('')}</select>
+    <span class="hint">显示 ${show.length}/${fr.length}　${edit?'· 直接在「你的判断」「备注」里填写，离开输入框自动保存，填完点左侧「重新生成」':''}${iomap?'· 点模块的「复制」得到 16 行变量名，粘到 I/O 映射该插槽 bit0 起':''}</span>
+    <span style="flex:1"></span><button onclick="cache={};refresh()">刷新</button></div>
+  <table><thead><tr>${iomap?'<th></th>':''}${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>
+  ${show.map((r,i)=>`<tr>${iomap?`<td>${(i===0||show[i-1][2]!==r[2])&&r[2]?`<button onclick="copyMod('${esc(r[2])}')">复制 ${esc(r[2])}</button>`:''}</td>`:''}${r.map((v,j)=>{
+      const h=cols[j];
+      if(edit&&(h==='你的判断'||h==='备注')) return `<td><input value="${esc(v)}" data-r="${rows.indexOf(r)}" data-h="${esc(h)}" onchange="saveFb(this)"></td>`;
+      if(j===0) return `<td class="st">${pill(v)}</td>`;
+      if(/程序|变量|线号|原文/.test(h)) return `<td class="code">${esc(v)}</td>`;
+      return `<td>${esc(v)}</td>`}).join('')}</tr>`).join('')}
+  </tbody></table>${fr.length>show.length?`<p><button onclick="FILTER.limit+=1000;renderTable(cache[TAB])">再显示 1000 行</button></p>`:''}`;
+}
+async function saveFb(inp){
+  const t=cache.results, r=t.rows[+inp.dataset.r], cols=t.columns, g=n=>r[cols.indexOf(n)];
+  r[cols.indexOf(inp.dataset.h)]=inp.value;
+  try{const j=await post(`/api/p/${enc(P)}/feedback`,{wire:g('图纸原线号'),function:g('图纸功能'),var:g('程序变量'),judge:g('你的判断'),remark:g('备注')});
+    inp.classList.add('saved');toast(`已保存（共 ${j.count} 条判断），改完点「重新生成」`);ST.feedback=j.count;renderCards()}catch(e){toast('保存失败：'+e.message)}
+}
+async function copyMod(mod){
+  const t=cache.iomap, names=t.rows.filter(r=>r[2]===mod).map(r=>r[4]).join('\r\n');
+  await navigator.clipboard.writeText(names); toast(`已复制 ${mod} 的变量名，粘到 I/O 映射对应插槽 bit0 起`);
+}
+async function renderSections(){
+  if(!ST.has_output){$('#view').innerHTML='<div class="empty">还没有生成结果</div>';return}
+  const secs=cache.secs||(cache.secs=await api(`/api/p/${enc(P)}/sections`));
+  secCur=secCur||secs[0];
+  const s=await api(`/api/p/${enc(P)}/section/${enc(secCur)}`);
+  const cls=l=>/====== ST块/.test(l)?'blk':/\/\/ 新图纸注释/.test(l)?'cmt':/\/\/ 原 /.test(l)?'chg':/\/\/ 新增|新增点（对点工具生成）/.test(l)?'add':/已启用|空块占位/.test(l)?'en':'';
+  const render=t=>t.split(/\r?\n/).map(l=>`<span class="l ${cls(l)}">${esc(l)||' '}</span>`).join('');
+  $('#view').innerHTML=`<div class="toolbar"><span class="legend"><span><i style="background:var(--blue-bg)"></i>改线号</span><span><i style="background:#f1f1f1"></i>新图纸注释掉</span><span><i style="background:#e6f4ea"></i>新增</span><span><i style="background:var(--yel-bg)"></i>启用/占位</span></span>
+    <span style="flex:1"></span><label><input type="checkbox" ${showOld?'checked':''} onchange="showOld=this.checked;renderSections()"> 对照旧程序</label></div>
+    <div class="secwrap" style="height:calc(100% - 44px)"><div class="seclist">${secs.map(x=>`<div class="${x===secCur?'on':''}" onclick="secCur='${esc(x)}';renderSections()">${esc(x)}</div>`).join('')}</div>
+    <div class="code">${showOld?`<div class="pane"><h4>旧程序</h4><pre>${render(s.old)}</pre></div>`:''}<div class="pane"><h4>新程序 · ${esc(secCur)}</h4><pre>${render(s.new)}</pre></div></div></div>`;
+}
+function renderPaste(){
+  $('#view').innerHTML=`<div class="paste"><h3>粘贴回 Sysmac（建议先在工程副本上做）</h3><ol>
+  <li><b>I/O 映射</b>：打开「IO映射」页签，按模块点「复制」，粘到 Sysmac I/O 映射对应插槽的 bit0 起。<br><button onclick="setTab('iomap')">打开 IO映射</button></li>
+  <li><b>全局变量</b>：点下面按钮复制新增变量，到 Sysmac 全局变量表粘贴。<br><button class="primary" onclick="copyNewvars()">复制新增变量（${(ST.counts||{})['新增变量']||0} 个）</button></li>
+  <li><b>程序段</b>：点下面按钮放入剪贴板，然后到 Sysmac 左侧右键 <b>POUs →「粘贴多个项目」</b>（先删掉旧的两个刷新程序）。<b>中间不要再复制别的东西。</b><br><button class="primary" onclick="writeClip()">放入剪贴板</button></li>
+  <li><b>编译</b>。有报错截图发给 AI，或看「清算报告」。</li></ol></div>`;
+}
+async function copyNewvars(){try{await post(`/api/p/${enc(P)}/copy_newvars`);toast('新增变量已复制，到 Sysmac 全局变量表粘贴')}catch(e){toast(e.message)}}
+async function writeClip(){try{const j=await post(`/api/p/${enc(P)}/write_clipboard`);showLog('放入剪贴板',j.log);toast('已放入剪贴板 → Sysmac 右键 POUs 粘贴多个项目',4000)}catch(e){showLog('放入剪贴板失败',e.message)}}
+async function readClip(){try{const j=await post(`/api/p/${enc(P)}/read_clipboard`);showLog('读取旧程序',j.log);cache={};refresh()}catch(e){showLog('读取失败',e.message)}}
+async function uploadPdf(inp){const f=inp.files[0];if(!f)return;toast('上传中…');
+  try{await api(`/api/p/${enc(P)}/drawing?filename=${enc(f.name)}`,{method:'POST',body:f});toast('图纸已上传');refresh()}catch(e){toast(e.message)}}
+async function runAll(full){try{await post(`/api/p/${enc(P)}/run`,{full});cache={};watchJob();refresh()}catch(e){toast(e.message)}}
+function watchJob(){clearInterval(polling);$('#log').style.display='flex';
+  polling=setInterval(async()=>{const j=await api(`/api/p/${enc(P)}/job`);$('#logtitle').textContent='任务：'+(j.step||'');const t=$('#logtext');t.textContent=j.log;t.scrollTop=t.scrollHeight;
+    if(!j.running){clearInterval(polling);cache={};refresh();toast(j.rc===0?'完成':'失败，看日志',3500)}},1000)}
+function showLog(t,s){$('#log').style.display='flex';$('#logtitle').textContent=t;$('#logtext').textContent=s}
+function hideLog(){$('#log').style.display='none'}
+function md(s){return esc(s).replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>')
+  .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^- (.*)$/gm,'<li>$1</li>').replace(/^(\d+)\. (.*)$/gm,'<li>$2</li>').replace(/\n\n/g,'<br>')}
+loadProjects();
+</script>
+</body>
+</html>

@@ -12,6 +12,28 @@
 - 所有命令在本目录下执行，并设置 `PYTHONIOENCODING=utf-8`（PowerShell：`$env:PYTHONIOENCODING="utf-8"`）。
 - 下文 `<项目>` 指 `项目/<项目名>`，建议每个项目一个目录。
 
+## 优先使用可视化工作台（人和 AI 共用同一份数据）
+用户双击 `打开工作台.bat`（或 `python scripts/workbench/server.py --root .`）后，浏览器打开 http://127.0.0.1:8765 。
+工作台同时提供 JSON 接口，**AI 应优先通过接口操作**，这样用户在网页上看到的就是你做的结果：
+```
+GET  http://127.0.0.1:8765/api                      接口清单
+GET  /api/projects                                   项目列表
+POST /api/projects {"name":"XXX"}                    新建项目（目录 项目/XXX/）
+POST /api/p/XXX/read_clipboard                       读旧程序（用户先在 Sysmac 复制）
+POST /api/p/XXX/drawing_path {"path":"D:/图纸.pdf"}   指定图纸
+POST /api/p/XXX/run {"full":true}                    对点+生成+清算（后台）；full=false 复用点表
+GET  /api/p/XXX/job                                  进度和日志（running=false 后看 rc）
+GET  /api/p/XXX/status                               统计
+GET  /api/p/XXX/table/results|doubts|questions|audit|changes|newvars|iomap|extra
+POST /api/p/XXX/feedback {"wire":"I-A01-00","function":"…","var":"…","judge":"…","remark":"…"}
+GET  /api/p/XXX/section/<段名>                       新旧程序全文
+POST /api/p/XXX/write_clipboard                      放入 Sysmac 剪贴板
+POST /api/p/XXX/copy_newvars                         新增变量复制到剪贴板
+```
+（项目名、段名含中文时 URL 要编码。用 curl 时注意 Windows 路径里的反斜杠。）
+工作台没开时，用下面的命令行流程，效果相同。
+
+
 ## 流程（按对话推进，每步做完告诉用户下一步）
 
 ### 1. 读旧程序（用户说“已复制”）
