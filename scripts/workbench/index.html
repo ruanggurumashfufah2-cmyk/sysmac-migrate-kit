@@ -58,7 +58,11 @@ th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertic
 th{position:sticky;top:0;background:#f7f8f6;z-index:1;font-weight:600;white-space:nowrap}
 tr:hover td{background:#fafcfb}
 td.st{white-space:nowrap}
-td.code{font-family:var(--mono);font-size:12px}
+td.code{font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.txt{min-width:160px;max-width:420px;word-break:break-all}
+td.short{white-space:nowrap}
+th.num{text-align:right}
 td input{width:100%;min-width:110px;padding:3px 6px}
 td input.saved{border-color:var(--ok);background:var(--ok-bg)}
 .pill{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px}
@@ -70,7 +74,7 @@ td input.saved{border-color:var(--ok);background:var(--ok-bg)}
 .seclist{width:240px;flex:none;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto}
 .seclist div{padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px}
 .seclist div.on{background:var(--accent-2);color:var(--accent);font-weight:600}
-.code{flex:1;display:flex;gap:10px;min-width:0}
+.codewrap{flex:1;display:flex;gap:10px;min-width:0}
 .pane{flex:1;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto;min-width:0}
 .pane h4{margin:0;padding:8px 12px;border-bottom:1px solid var(--line);background:#f7f8f6;position:sticky;top:0}
 pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.6}
@@ -205,8 +209,22 @@ function renderOverview(){
     ${blk('改动',c['改动分类'])}${blk('清算（需要看的）',c['清算分类'])}${blk('对点结果',c['对点结果'])}</div>`
     :'<div class="empty">按左侧 ① 读旧程序 → ② 选图纸 → ③ 对点并生成</div>';
 }
+let KIND={};
+function colKind(h,rows){
+  if(KIND[h]) return KIND[h];
+  const j=(cache[TAB]||{columns:[]}).columns.indexOf(h);
+  const vals=j<0?[]:rows.slice(0,300).map(r=>r[j]).filter(v=>v!==''&&v!=null);
+  let k='txt';
+  if(vals.length&&vals.every(v=>typeof v==='number'||/^-?\d+(\.\d+)?$/.test(String(v)))) k='num';
+  else if(/说明|注释|情况|依据|功能|处理|判断|备注|结论|标题|来源/.test(h)) k=(vals.length&&Math.max(...vals.map(v=>String(v).length))<=12)?'short':'txt';
+  else if(/程序原文|原文|新文|程序行/.test(h)) k='code';
+  else if(/线号|变量|名称|数据类型|模块|通道|槽位|程序段|位置/.test(h)) k='code';
+  else if(vals.length&&Math.max(...vals.map(v=>String(v).length))<=12) k='short';
+  return KIND[h]=k;
+}
 let FILTER={q:'',st:'',limit:400};
 function renderTable(t){
+  if(KIND.__t!==t){KIND={__t:t}}
   const cols=t.columns, rows=t.rows;
   if(!cols.length){$('#view').innerHTML='<div class="empty">没有数据</div>';return}
   const stIdx=0, edit=TAB==='results';
@@ -221,13 +239,13 @@ function renderTable(t){
     <select onchange="FILTER.st=this.value;renderTable(cache[TAB])"><option value="">全部（${rows.length}）</option>${sts.map(s=>`<option ${s===FILTER.st?'selected':''} value="${esc(s)}">${esc(s)}（${rows.filter(r=>r[stIdx]===s).length}）</option>`).join('')}</select>
     <span class="hint">显示 ${show.length}/${fr.length}　${edit?'· 直接在「你的判断」「备注」里填写，离开输入框自动保存，填完点左侧「重新生成」':''}${iomap?'· 点模块的「复制」得到 16 行变量名，粘到 I/O 映射该插槽 bit0 起':''}</span>
     <span style="flex:1"></span><button onclick="cache={};refresh()">刷新</button></div>
-  <table><thead><tr>${iomap?'<th></th>':''}${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>
+  <table><thead><tr>${iomap?'<th></th>':''}${cols.map(c=>`<th class="${colKind(c,rows)==='num'?'num':''}">${esc(c)}</th>`).join('')}</tr></thead><tbody>
   ${show.map((r,i)=>`<tr>${iomap?`<td>${(i===0||show[i-1][2]!==r[2])&&r[2]?`<button onclick="copyMod('${esc(r[2])}')">复制 ${esc(r[2])}</button>`:''}</td>`:''}${r.map((v,j)=>{
       const h=cols[j];
       if(edit&&(h==='你的判断'||h==='备注')) return `<td><input value="${esc(v)}" data-r="${rows.indexOf(r)}" data-h="${esc(h)}" onchange="saveFb(this)"></td>`;
-      if(j===0) return `<td class="st">${pill(v)}</td>`;
-      if(/程序|变量|线号|原文/.test(h)) return `<td class="code">${esc(v)}</td>`;
-      return `<td>${esc(v)}</td>`}).join('')}</tr>`).join('')}
+      if(j===0&&typeof v!=='number'&&v!=='') return `<td class="st">${pill(v)}</td>`;
+      const k=colKind(h,rows);
+      return `<td class="${k}">${esc(v)}</td>`}).join('')}</tr>`).join('')}
   </tbody></table>${fr.length>show.length?`<p><button onclick="FILTER.limit+=1000;renderTable(cache[TAB])">再显示 1000 行</button></p>`:''}`;
 }
 async function saveFb(inp){
@@ -250,7 +268,7 @@ async function renderSections(){
   $('#view').innerHTML=`<div class="toolbar"><span class="legend"><span><i style="background:var(--blue-bg)"></i>改线号</span><span><i style="background:#f1f1f1"></i>新图纸注释掉</span><span><i style="background:#e6f4ea"></i>新增</span><span><i style="background:var(--yel-bg)"></i>启用/占位</span></span>
     <span style="flex:1"></span><label><input type="checkbox" ${showOld?'checked':''} onchange="showOld=this.checked;renderSections()"> 对照旧程序</label></div>
     <div class="secwrap" style="height:calc(100% - 44px)"><div class="seclist">${secs.map(x=>`<div class="${x===secCur?'on':''}" onclick="secCur='${esc(x)}';renderSections()">${esc(x)}</div>`).join('')}</div>
-    <div class="code">${showOld?`<div class="pane"><h4>旧程序</h4><pre>${render(s.old)}</pre></div>`:''}<div class="pane"><h4>新程序 · ${esc(secCur)}</h4><pre>${render(s.new)}</pre></div></div></div>`;
+    <div class="codewrap">${showOld?`<div class="pane"><h4>旧程序</h4><pre>${render(s.old)}</pre></div>`:''}<div class="pane"><h4>新程序 · ${esc(secCur)}</h4><pre>${render(s.new)}</pre></div></div></div>`;
 }
 function renderPaste(){
   $('#view').innerHTML=`<div class="paste"><h3>粘贴回 Sysmac（建议先在工程副本上做）</h3><ol>
