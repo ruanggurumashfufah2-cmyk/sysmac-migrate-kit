@@ -1,0 +1,35 @@
+# Sysmac 程序迁移工具包
+
+把旧项目的 Sysmac Studio 映射程序段，按新项目的 CAD 电气图纸自动对点、改好，再一次粘贴回 Sysmac。
+已在实际项目验证：粘贴成功、编译通过。
+
+## 安装（每台电脑一次）
+1. 安装 Python 3.10 以上（安装时勾选 “Add Python to PATH”）。
+2. 在本文件夹打开命令行，运行：
+   ```
+   pip install -r requirements.txt
+   ```
+3. 仅支持 Windows（需要读写剪贴板）。
+
+## 在不同 AI 助手里使用
+本包自带给 AI 看的说明，**用哪个助手都行，把本文件夹作为工作目录打开即可**：
+
+| 助手 | 怎么用 |
+|---|---|
+| Claude Code（任意项目） | 把整个文件夹复制到 `C:\Users\<你>\.claude\skills\sysmac-migrate\`，之后在任何项目里输入 `/sysmac-migrate` 或说“新项目对点” |
+| Claude Code（当前文件夹） | 直接在本文件夹打开，它会读 `AGENTS.md`/`SKILL.md` |
+| Codex、Cursor、Gemini CLI、Copilot 等 | 在本文件夹打开，它们会自动读 `AGENTS.md`；没有自动读的，第一句话说“先读 AGENTS.md 和 迁移原则.md” |
+| 不用 AI | 按 `使用说明.md` 直接运行命令 |
+
+## 平时怎么说（对 AI）
+1. “新项目对点，项目名 XXX”，并把图纸 PDF 放进 `项目/XXX/`
+2. 在 Sysmac 复制旧程序段后说 “已复制”
+3. “对点并生成新程序段”
+4. （可选）在报告里填判断后说 “填好了”
+5. 按提示粘贴回 Sysmac、编译，有报错发截图
+
+## 文件
+- `AGENTS.md` / `SKILL.md`：给 AI 的操作说明
+- `迁移原则.md`：你确认过的规则（以图纸为准、命名习惯……），**新规则也记在这里**
+- `使用说明.md`：给人看的详细操作说明
+- `scripts/`：全部脚本（纯 Python）

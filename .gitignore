@@ -1,0 +1,13 @@
+# 项目数据（图纸、旧程序、报告）不要上传
+项目/
+*.pdf
+*.bin
+*.xlsx
+*.csv
+*.st.txt
+对点反馈.json
+新增变量.txt
+放入剪贴板.bat
+粘贴助手.html
+__pycache__/
+*.pyc
