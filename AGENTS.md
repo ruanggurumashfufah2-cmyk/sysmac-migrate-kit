@@ -89,5 +89,9 @@ python scripts/sysmac-read/write_sysmac_clipboard.py "<项目>/旧程序/clipboa
 - 待判断默认按 `problem_group` 分组，同组内按从站/类型/模块/通道自然排序，组标题支持选择当前筛选下整组（不限本页），分类按钮快速切换；可改回图纸顺序。`problem_reason` 在人工处理覆盖说明前保留原始原因，`reason` 展示当前处理状态，暂缓后分类不变。按任务 ID 绑定选择和编辑，不用排序后的行号替换任务身份。界面调整不得清除或代填用户判断。
 - `cross_match.py` 在同地址初配后检查“地址都存在”的完整互换闭环（同命名体系/站/DI、DO、AI、AO 类型）；设备、侧别、动作、轴和编号是约束，分数≥0.8，正反两侧各领先次选且较原配对改善≥0.12，整组唯一才覆盖临时自动初配并标黄。人工处理/暂缓及其源目标锁定；不部分执行、不跨站、不改表达式。结果元数据 `automatic_swap` 记录 group/count/source_wire/target_wire/score/margin/links，变更清单记录成组依据。不能靠下调相似度或删除侧别信息来消除冲突。
 - `命名规则.json` 的自定义正则需要 station/module/channel 捕获组以及 kind 或固定类型，输出模板须同时声明在 patterns 中；模板只描述命名，不推断物理关系。扫描 PDF 和非行排列的版式目前需要另外适配。
+- **改任何脚本前先跑 `python tests/regress.py --check`，改完再跑一次，必须全绿。**
+  它会用 `tests/cases/` 里的真实项目重跑一遍，把全部输出跟 `tests/golden/` 的快照逐行比对，
+  静默改错（线号接错、漏点、名字变了）都会当场暴露。加了新用例或确认改动正确后，
+  用 `--snapshot` 更新快照。详见 `tests/README.md`。
 - 改规则时同时改脚本和 `迁移原则.md`，保持一致；改完重跑并清算，确认静态检查（空块、空分支、IF 配对、重复赋值）为 0。
 - Sysmac 剪贴板数据结构：16 字节 GUID + .NET BinaryFormatter；每个 ST 块的文字存两份（PouBody JSON 的 `TXT` 和 Inline/StructuredText XML），两份都要改；byte[] 长度和 `EncodedDataLength` 要重算；`InstanceHash` 是对象身份哈希不是校验。细节见 `scripts/sysmac-read/write_sysmac_clipboard.py` 文件头。

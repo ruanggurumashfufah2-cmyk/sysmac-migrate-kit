@@ -11,3 +11,7 @@
 粘贴助手.html
 __pycache__/
 *.pyc
+
+# 回归用例与期望快照必须进仓库，否则改代码无法验证
+!tests/cases/**
+!tests/golden/**

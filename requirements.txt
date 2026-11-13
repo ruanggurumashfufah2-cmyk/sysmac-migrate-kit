@@ -1,2 +1,5 @@
-pymupdf>=1.24
-openpyxl>=3.1
+# 锁定版本：回归快照是用这组版本跑出来的，换版本请重跑 tests/regress.py
+# 注意 pymupdf 装到了 2.x（比原开发的 1.24 高一个大版本）。若真实图纸提取异常，
+# 先回退对照：pip install "pymupdf==1.24.14"，然后 python tests/regress.py --check
+pymupdf==2.1
+openpyxl==3.1.5
