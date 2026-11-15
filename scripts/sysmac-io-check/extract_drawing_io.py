@@ -369,6 +369,8 @@ def read_points_csv(path):
 def main():
     pdf, csv_path = sys.argv[1], sys.argv[2]
     pts = extract(pdf)
+    if not pts or not any(p.get('wire') for p in pts):
+        sys.exit('图纸未识别到有效 I/O 点位：请检查图纸是否包含受支持格式的 I/O 表和线号；已停止，未覆盖点表。')
     write_points_csv(pts, csv_path)
     pages = sorted({p['page'] for p in pts})
     print(f'I/O 页 {len(pages)} 页, 点位 {len(pts)} 个, 有线号 {sum(1 for p in pts if p["wire"])} 个')

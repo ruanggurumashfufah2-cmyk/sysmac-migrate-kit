@@ -25,6 +25,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 WIRE_VAR = re.compile(r'\b(ID|OD)_([A-Z])(\d[0-9A-Z]|\d{3})(?:_(\d{2})|\[(\d+)\])')
 ANA_VAR = re.compile(r'\b(AD|DA)_([A-Z])(\d[0-9A-Z]|\d{3})_(\d{1,2})\b')
 FUNC_VAR = re.compile(r'(?<![\w#])([A-Za-z_一-鿿][\w一-鿿]*(?:\[\d+\])?)')
+OTHER_IO_VAR = re.compile(r'\b[A-Z]+\d+_(?:[IQO]\d+_\d{1,2}|\d*A[IQ]\d+)\b')
 KEYWORDS = {'NOT', 'AND', 'OR', 'INT', 'REAL', 'INT_TO_REAL', 'REAL_TO_INT', 'TRUE', 'FALSE'}
 
 
@@ -111,6 +112,40 @@ def parse_program(folder):
     return rows
 
 
+def check_unsupported_program(folder):
+    """Reject unsupported station/module/channel tokens, including mixed-format programs."""
+    for fp in sorted(glob.glob(os.path.join(folder, '*.st.txt'))):
+        in_block = False
+        with open(fp, encoding='utf-8') as f:
+            lines = f.read().splitlines()
+        for ln, raw in enumerate(lines, 1):
+            # Ignore comments, including multi-line ST comments; never rewrite source.
+            code = ''
+            pos = 0
+            while pos < len(raw):
+                if in_block:
+                    end = raw.find('*)', pos)
+                    if end < 0:
+                        break
+                    in_block = False
+                    pos = end + 2
+                else:
+                    start = raw.find('(*', pos)
+                    line_comment = raw.find('//', pos)
+                    if line_comment >= 0 and (start < 0 or line_comment < start):
+                        code += raw[pos:line_comment]
+                        break
+                    if start < 0:
+                        code += raw[pos:]
+                        break
+                    code += raw[pos:start]
+                    in_block = True
+                    pos = start + 2
+            match = OTHER_IO_VAR.search(code) if ':=' in code else None
+            if match:
+                raise ValueError(f'旧程序包含暂不支持的从站线号 {match.group()}（{os.path.basename(fp)} 第 {ln} 行），已停止；请先适配该格式。')
+
+
 # ---------- 名称比较 ----------
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 SYN_FILE = os.path.join(SKILL_DIR, 'synonyms.json')
@@ -125,7 +160,8 @@ DEFAULT_SYN = [
 def load_synonyms():
     """同义词表：skill 目录下 synonyms.json（由 learn_feedback.py 维护），首次运行用默认值"""
     if os.path.exists(SYN_FILE):
-        syn = [tuple(x) for x in json.load(open(SYN_FILE, encoding='utf-8'))]
+        with open(SYN_FILE,encoding='utf-8') as f:
+            syn = [tuple(x) for x in json.load(f)]
     else:
         syn = list(DEFAULT_SYN)
     return sorted(syn, key=lambda x: -len(x[0]))
@@ -258,7 +294,7 @@ def compare(drawing, program, feedback=None):
                 rec.update(status='❌ 编号不一致', note='；'.join(conflict))
             elif sc >= 0.75:
                 rec.update(status='✅ 一致')
-            elif sc >= 0.45:
+            elif sc >= 0.50:
                 rec.update(status='⚠️ 名称相似，请确认')
             else:
                 rec.update(status='❌ 名称不一致')
@@ -822,7 +858,15 @@ def main():
     fb_path = os.path.join(os.path.dirname(os.path.abspath(out)), '对点反馈.json')
     feedback = json.load(open(fb_path, encoding='utf-8')) if os.path.exists(fb_path) else {}
     drawing = read_points_csv(csv_path)
+    if not drawing or not any(d.get('wire') for d in drawing):
+        sys.exit('图纸点表没有有效线号，已停止对点；请检查图纸和提取格式。')
+    try:
+        check_unsupported_program(folder)
+    except ValueError as e:
+        sys.exit(str(e))
     program = parse_program(folder)
+    if not program:
+        sys.exit('旧程序没有识别出 I/O 映射行，已停止对点；请检查程序是否为空或线号格式尚不支持。')
     results, extra = compare(drawing, program, feedback)
     from check_drawing import find_doubts
     doubts = find_doubts(drawing)

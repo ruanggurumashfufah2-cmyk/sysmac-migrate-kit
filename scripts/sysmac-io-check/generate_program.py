@@ -551,7 +551,15 @@ def main():
     fb_path = sys.argv[4] if len(sys.argv) > 4 else os.path.join(os.path.dirname(os.path.abspath(csv_path)), '对点反馈.json')
     feedback = json.load(open(fb_path, encoding='utf-8')) if os.path.exists(fb_path) else {}
     drawing = read_points_csv(csv_path)
+    if not drawing or not any(d.get('wire') for d in drawing):
+        sys.exit('图纸点表没有有效线号，已停止生成，原有结果未覆盖。')
+    try:
+        C.check_unsupported_program(prog_dir)
+    except ValueError as e:
+        sys.exit(str(e))
     program = C.parse_program(prog_dir)
+    if not program:
+        sys.exit('旧程序没有识别出 I/O 映射行，已停止生成，原有结果未覆盖；请检查线号格式。')
     results, extra = C.compare(drawing, program, feedback)
 
     array_mods = {('ID' if p['wire'][0] == 'I' else 'OD', p['wire'].split('-')[1])

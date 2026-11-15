@@ -1,0 +1,16 @@
+{
+  "profiles": [
+    {
+      "name": "dotted-station",
+      "patterns": [
+        "(?P<station>S\\d+)\\.(?P<kind>DI|DO)\\.(?P<module>\\d+)\\.(?P<channel>\\d+)",
+        "(?P<kind>IN|OUT)_(?P<station>S\\d+)_M(?P<module>\\d+)_C(?P<channel>\\d+)"
+      ],
+      "kind_map": {"IN": "DI", "OUT": "DO"},
+      "program_templates": {
+        "DI": "IN_{station}_M{module}_C{channel:02d}",
+        "DO": "OUT_{station}_M{module}_C{channel:02d}"
+      }
+    }
+  ]
+}

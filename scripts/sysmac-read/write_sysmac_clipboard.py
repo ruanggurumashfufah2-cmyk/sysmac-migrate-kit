@@ -45,8 +45,9 @@ def json_escape(s):
     return ''.join(out)
 
 
-def xml_escape(s):
-    return s.replace('&', '&amp;').replace('<', '&lt;')
+def xml_escape(s, escape_gt=False):
+    s = s.replace('&', '&amp;').replace('<', '&lt;')
+    return s.replace('>', '&gt;') if escape_gt else s
 
 
 def xml_unescape(s):
@@ -109,12 +110,45 @@ def norm(s):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
-    raw_path, new_dir = args[0], args[1]
+    raw_path, new_dir = os.path.abspath(args[0]), os.path.abspath(args[1])
     old_dir = os.path.dirname(os.path.abspath(raw_path))
     types_path = None
     if '--types' in sys.argv:
         types_path = sys.argv[sys.argv.index('--types') + 1]
     no_clip = '--no-clip' in sys.argv
+    manifest_path = os.path.join(new_dir, '迁移状态.json')
+    if not no_clip and os.path.exists(manifest_path):
+        with open(manifest_path, encoding='utf-8') as f:
+            manifest = json.load(f)
+        if manifest.get('ready') is not True:
+            sys.exit('当前输出是核对稿，尚有未完成的迁移判断，不能写入 Sysmac 剪贴板。')
+        import hashlib
+        def digest(path):
+            h=hashlib.sha256()
+            with open(path,'rb') as f:
+                for chunk in iter(lambda:f.read(1024*1024),b''):h.update(chunk)
+            return h.hexdigest()
+        for folder, field in ((old_dir,'source_hashes'),(new_dir,'output_hashes')):
+            expected=manifest.get(field,{})
+            if not expected:
+                sys.exit('迁移验证信息不完整，请重新生成。')
+            current_st={fn for fn in os.listdir(folder) if fn.endswith('.st.txt')}
+            if current_st!={fn for fn in expected if fn.endswith('.st.txt')}:
+                sys.exit('程序段列表已变化，请重新对点并生成。')
+            for filename,sha in expected.items():
+                path=os.path.join(folder,filename)
+                if os.path.basename(filename)!=filename or not os.path.isfile(path) or digest(path)!=sha:
+                    sys.exit('程序或变量文件已变化，请重新对点并生成。')
+        feedback_path=os.path.join(os.path.dirname(new_dir),'对点反馈.json')
+        feedback_sha=digest(feedback_path) if os.path.exists(feedback_path) else None
+        if feedback_sha!=manifest.get('feedback_sha256'):
+            sys.exit('判断已变化，请重新生成后再写入。')
+        rules_path=manifest.get('rules_path','')
+        rules_sha=digest(rules_path) if os.path.isfile(rules_path) else None
+        if rules_sha!=manifest.get('rules_sha256'):
+            sys.exit('命名规则已变化，请重新提取并生成。')
+        if not os.path.isfile(manifest.get('pdf','')) or digest(manifest['pdf'])!=manifest.get('pdf_sha256'):
+            sys.exit('图纸已变化，请重新提取并生成。')
 
     d = open(raw_path, 'rb').read()
     arrs = find_arrays(d)
@@ -139,8 +173,9 @@ def main():
         x = d[a['data']:a['data'] + a['used']].decode('utf-8')
         m = re.search(r'<Text>(.*)</Text>', x, re.S)
         txt = xml_unescape(m.group(1))
-        assert xml_escape(txt) == m.group(1), f'XML 转义往返不一致（实体 {a["oid"]}），停止'
-        xml_by_text.setdefault(txt, []).append((a, x, m))
+        escape_gt = xml_escape(txt) != m.group(1)
+        assert xml_escape(txt, escape_gt) == m.group(1), f'XML 转义往返不一致（实体 {a["oid"]}），停止'
+        xml_by_text.setdefault(txt, []).append((a, x, m, escape_gt))
 
     # 逐个 PouBody：按段、按块替换
     counter = {}
@@ -176,9 +211,9 @@ def main():
             cands = xml_by_text.get(old_txt) or []
             assert cands, f'{sec} 块{k} 找不到对应的 Inline ST 源码，停止'
             assert len(cands) == 1, f'{sec} 块{k} 的原文和别的块完全相同，无法确定对应的源码实体，停止'
-            xa, x, m = cands.pop(0)
-            edits[xa['oid']] = (BOM + (x[1:m.start(1)] + xml_escape(new_txt) + x[m.end(1):]).encode('utf-8')) \
-                if x.startswith('﻿') else (x[:m.start(1)] + xml_escape(new_txt) + x[m.end(1):]).encode('utf-8')
+            xa, x, m, escape_gt = cands.pop(0)
+            edits[xa['oid']] = (BOM + (x[1:m.start(1)] + xml_escape(new_txt, escape_gt) + x[m.end(1):]).encode('utf-8')) \
+                if x.startswith('﻿') else (x[:m.start(1)] + xml_escape(new_txt, escape_gt) + x[m.end(1):]).encode('utf-8')
         if out:
             out.append(text[last:])
             edits[a['oid']] = BOM + ''.join(out).encode('utf-8')

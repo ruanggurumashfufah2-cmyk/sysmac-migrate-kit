@@ -68,6 +68,8 @@ def parse_lines(prog_dir):
 def main():
     csv_path, prog_dir = sys.argv[1:3]
     drawing = read_points_csv(csv_path)
+    if not drawing or not any(d.get('wire') for d in drawing):
+        sys.exit('图纸点表没有有效线号，已停止清算，原有报告未覆盖。')
     by_wire = {d['wire']: d for d in drawing if d['wire'] and d['void'] != '整页作废'}
     rows = parse_lines(prog_dir)
     issues = []

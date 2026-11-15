@@ -26,6 +26,7 @@ GET  /api/p/XXX/job                                  进度和日志（running=f
 GET  /api/p/XXX/status                               统计
 GET  /api/p/XXX/table/results|doubts|questions|audit|changes|newvars|iomap|extra
 POST /api/p/XXX/feedback {"wire":"I-A01-00","function":"…","var":"…","judge":"…","remark":"…"}
+POST /api/p/XXX/feedback_batch {"items":[{"wire":"@review:任务id","judge":"JSON文字","remark":"…"}]}
 GET  /api/p/XXX/section/<段名>                       新旧程序全文
 POST /api/p/XXX/write_clipboard                      放入 Sysmac 剪贴板
 POST /api/p/XXX/copy_newvars                         新增变量复制到剪贴板
@@ -81,5 +82,12 @@ python scripts/sysmac-read/write_sysmac_clipboard.py "<项目>/旧程序/clipboa
 | `scripts/sysmac-io-check/learn_feedback.py` | 读回用户在报告里的判断，存 `对点反馈.json`，同义词存 `synonyms.json` |
 
 ## 注意
+- `run_all.py` 会分别检测程序与图纸的命名格式。从站格式或自定义规则采用 `adaptive_workflow.py`；旧格式保留原流程。工作台调用统一入口。
+- 通用流程的 `新程序段/迁移状态.json` 为 `needs_review` 时，报告/源码是核对稿；不能声称迁移完成。可通过 `GET /api/p/<项目>/status` 的 `migration` 查看。判断输入当前支持“对/确认/保留原变量/图纸多余/不用”，自由文字仅记录供人工解读，不自动执行。
+- 通用流程“待判断”页支持结构化处理，元数据位于待判断表隐藏的“处理数据”列。继续使用反馈接口保存：wire=`@review:<任务id>`，function/var 留空，judge 为 JSON `{"action":"confirm|source|new|unused|ignore|address|keep_module|comment_module|defer","values":{...}}`。任务 ID 绑定图纸、源程序及命名规则版本；生成端验证操作和参数。撤回通过同一 key 保存空判断，下一次生成重新计算。不要手工伪造已处理状态或直接减少待判断数量。
+- 通用 UI 的判断入口统一在“待判断”，结果表只读。默认紧凑表格 200 条，可按类型/从站/模块分组选择全部筛选结果并预览批量变更；批量新建按模板起名、指定程序段、拦截重名。`feedback_batch` 校验整批后在锁内原子写入；对已运行的旧服务 UI 兼容逐条保存并展示进度，全部成功后统一生成一次，中断不能假标完成。不要以批量界面存在为由替用户确认实际含义冲突。
+- 待判断默认按 `problem_group` 分组，同组内按从站/类型/模块/通道自然排序，组标题支持选择当前筛选下整组（不限本页），分类按钮快速切换；可改回图纸顺序。`problem_reason` 在人工处理覆盖说明前保留原始原因，`reason` 展示当前处理状态，暂缓后分类不变。按任务 ID 绑定选择和编辑，不用排序后的行号替换任务身份。界面调整不得清除或代填用户判断。
+- `cross_match.py` 在同地址初配后检查“地址都存在”的完整互换闭环（同命名体系/站/DI、DO、AI、AO 类型）；设备、侧别、动作、轴和编号是约束，分数≥0.8，正反两侧各领先次选且较原配对改善≥0.12，整组唯一才覆盖临时自动初配并标黄。人工处理/暂缓及其源目标锁定；不部分执行、不跨站、不改表达式。结果元数据 `automatic_swap` 记录 group/count/source_wire/target_wire/score/margin/links，变更清单记录成组依据。不能靠下调相似度或删除侧别信息来消除冲突。
+- `命名规则.json` 的自定义正则需要 station/module/channel 捕获组以及 kind 或固定类型，输出模板须同时声明在 patterns 中；模板只描述命名，不推断物理关系。扫描 PDF 和非行排列的版式目前需要另外适配。
 - 改规则时同时改脚本和 `迁移原则.md`，保持一致；改完重跑并清算，确认静态检查（空块、空分支、IF 配对、重复赋值）为 0。
 - Sysmac 剪贴板数据结构：16 字节 GUID + .NET BinaryFormatter；每个 ST 块的文字存两份（PouBody JSON 的 `TXT` 和 Inline/StructuredText XML），两份都要改；byte[] 长度和 `EncodedDataLength` 要重算；`InstanceHash` 是对象身份哈希不是校验。细节见 `scripts/sysmac-read/write_sysmac_clipboard.py` 文件头。

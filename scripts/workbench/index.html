@@ -69,6 +69,7 @@ td input.saved{border-color:var(--ok);background:var(--ok-bg)}
 .p-bad{background:var(--bad-bg);color:var(--bad)}.p-warn{background:var(--warn-bg);color:var(--warn)}
 .p-ok{background:var(--ok-bg);color:var(--ok)}.p-blue{background:var(--blue-bg);color:var(--blue)}.p-new{background:#e6f4ea;color:#1b6b33}
 .empty{color:var(--mute);padding:40px;text-align:center}
+tr.review-yellow td{background:var(--warn-bg)}
 /* 程序段 */
 .secwrap{display:flex;gap:14px;height:100%}
 .seclist{width:240px;flex:none;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto}
@@ -92,6 +93,68 @@ pre .l.en{background:var(--yel-bg)} pre .l.blk{background:#22302c;color:#cfe;fon
 .md code{background:#f2f3f0;padding:0 4px;border-radius:3px;font-family:var(--mono)}
 .paste{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 20px;max-width:880px}
 .paste ol li{margin:10px 0}
+.q-toolbar{position:sticky;top:0;z-index:4;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.q-toolbar .guide{margin:0 0 9px;color:var(--mute)}
+.q-list{display:grid;gap:12px;margin-top:14px;max-width:1280px}
+.q-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:8px;padding:14px 16px}
+.q-card.queued{border-left-color:var(--accent)}
+.q-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+.q-head b{font-family:var(--mono)}.q-tag{font-size:12px;padding:2px 8px;border-radius:12px;background:var(--warn-bg);color:var(--warn)}
+.q-tag.saved{background:var(--accent-2);color:var(--accent)}
+.q-reason{color:var(--bad);margin:8px 0}.q-loc,.q-help{color:var(--mute);font-size:12px}
+.q-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+.q-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+.q-form select,.q-form input{font-size:13px;color:var(--ink);max-width:740px}
+.q-form .wide{flex:1;min-width:240px}.q-form .wide input{width:100%}
+.q-context{max-height:190px;overflow:auto;white-space:pre-wrap;background:#f5f7f4;padding:8px;border-radius:5px;margin-top:6px}
+.q-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.q-actions span{font-size:12px;color:var(--mute)}
+#mobile-steps{display:none}
+.q-compact{width:100%;font-size:12px;table-layout:fixed}.q-compact td{padding:5px 7px;vertical-align:middle}
+.q-compact .q-check{width:32px}.q-compact .q-point{width:26%}.q-compact .q-old{width:25%}.q-compact .q-issue{width:25%}.q-compact .q-op{width:130px}
+.q-compact .q-code{font:12px var(--mono);overflow-wrap:anywhere}.q-compact .q-sub{font-size:11px;color:var(--mute);margin-top:3px}
+.q-compact input[type=checkbox]{width:16px;min-width:0}.q-compact .q-op button{font-size:12px;padding:4px 7px}
+.q-compact tr.selected td{background:var(--blue-bg)}.q-compact tr.queued td{background:var(--accent-2)}
+.q-compact .mobile-issue{display:none}.q-scope{padding:7px 10px;background:var(--accent-2);border-radius:6px;font-size:12px;margin:7px 0}
+.q-group-guide{margin:8px 0;font-size:12px;color:var(--ink)}.q-group-guide b{color:var(--accent)}
+.q-group-nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.q-group-nav button{font-size:12px;padding:4px 8px}.q-group-nav .on{background:var(--accent-2);border-color:var(--accent)}
+.q-group-heading{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}.q-group-heading b{color:var(--accent)}.q-group-heading button{font-size:12px;padding:4px 8px}
+.q-compact tr.q-group-row td{background:var(--accent-2);padding:8px;border-top:2px solid var(--line)}.q-group-section{margin:16px 0 8px;padding:10px;background:var(--accent-2);border-radius:6px}
+.q-compact-wrap{overflow:auto;max-width:100%}.q-table-toolbar{padding:9px;font-size:12px}.q-table-toolbar .guide{font-size:12px}
+dialog.q-dialog{width:min(760px,96vw);max-height:92vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:16px;color:var(--ink)}
+dialog.q-dialog::backdrop{background:rgba(14,26,22,.38)}.q-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.q-dialog .q-card{border-left:0;padding:8px 0}.q-dialog h3{margin:0}.q-preview-table input{width:100%;min-width:140px}
+#qpreview[open]{display:flex;flex-direction:column;overflow:hidden;height:88vh}#qpreview .q-dialog-head,#qpreview .q-guide-box,#qpreview .q-actions{flex-shrink:0}
+#qpreview .q-preview-scroll{overflow:auto;min-height:0;flex:1}#qpreview .q-actions{padding-top:10px;border-top:1px solid var(--line);background:white}
+.q-preview-table{font-size:12px}.q-preview-table th{position:sticky;top:0;z-index:1}.q-preview-error.q-preview-ok{color:var(--accent)}
+.q-preview-table select{max-width:200px}.q-preview-error{color:var(--bad);font-size:12px}.q-guide-box{background:var(--accent-2);padding:10px;border-radius:6px;font-size:13px}
+.q-preview-table tr.problem td{background:var(--bad-bg)}.q-batch-config{border:1px solid var(--line);border-radius:6px;padding:8px}
+@media(max-width:1000px){
+  #side{width:240px}#top{padding:10px}#tabs{padding:0 10px}#view{padding:12px}
+  .cards{gap:6px}.card{min-width:68px;padding:5px 8px}
+}
+@media(max-width:720px){
+  body{display:block;height:auto;min-height:100vh;overflow:auto}
+  #side{width:100%;height:auto;overflow:visible;display:block}
+  #side h1{padding:10px 14px 2px}#side .sub{padding:0 14px 8px}#side .sect{padding:8px 14px 2px}
+  #projects{display:flex;flex-wrap:wrap}.proj{padding:6px 10px}.newp{padding:6px 14px}.newp input{min-width:0}
+  #mobile-steps{display:block;margin:4px 14px 10px;background:#2a3431;color:#fff;border-color:#3b4844}
+  #steps{display:none}body.steps-open #steps{display:block}
+  #main{min-height:60vh}#top{display:block}.title{overflow-wrap:anywhere;margin-bottom:8px}
+  .cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.card{min-width:0;padding:4px 6px}.card b{font-size:16px}.card span{font-size:11px}
+  #tabs{position:sticky;top:0;z-index:6}.tab{padding:8px 10px;font-size:13px}
+  #view{overflow:visible;padding:10px}#view>table{display:block;max-width:100%;overflow:auto}
+  .q-toolbar{position:static}.q-toolbar input,.q-toolbar select{max-width:100%;min-width:0}
+  #qsearch{width:100%}.q-card{padding:12px}.q-head b{font-size:12px;overflow-wrap:anywhere}.q-head{gap:6px}
+  .q-form{display:block}.q-form label{margin:8px 0}.q-form .wide{min-width:0}.q-form select,.q-form input{width:100%;max-width:100%;min-width:0}
+  .q-actions button{flex:1 1 43%}.q-actions span{width:100%}.q-context{overflow-wrap:anywhere}
+  .q-compact .q-old,.q-compact .q-issue{display:none}.q-compact .q-point{width:auto}.q-compact .q-op{width:66px}.q-compact .q-op button{display:block;width:100%;margin:3px 0}
+  .q-compact .mobile-issue{display:block}.q-table-toolbar{padding:8px}.q-compact th,.q-compact td{padding:4px}
+  dialog.q-dialog{max-width:96vw;padding:10px}.q-preview-table{min-width:650px}
+  .secwrap{flex-direction:column;height:auto!important}.seclist{width:100%;max-height:180px}.codewrap{flex-direction:column}.pane{min-height:150px}.legend{flex-wrap:wrap}
+  #log{width:calc(100% - 20px);right:10px;bottom:10px;z-index:8}
+}
+@media(max-width:420px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -101,6 +164,7 @@ pre .l.en{background:var(--yel-bg)} pre .l.blk{background:#22302c;color:#cfe;fon
   <div class="sect">项目</div>
   <div id="projects"></div>
   <div class="newp"><input id="newname" placeholder="新项目名"><button onclick="newProject()">新建</button></div>
+  <button id="mobile-steps" aria-expanded="false" onclick="const open=document.body.classList.toggle('steps-open');this.textContent=open?'收起项目步骤':'展开项目步骤';this.setAttribute('aria-expanded',String(open))">展开项目步骤</button>
   <div id="steps"></div>
 </aside>
 <main id="main">
@@ -116,7 +180,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function api(path,opt={}){
   const r=await fetch(path,opt); const j=await r.json().catch(()=>({error:'返回不是 JSON'}));
-  if(!r.ok) throw new Error(j.error||j.log||('HTTP '+r.status)); return j;
+  if(!r.ok){const error=new Error(j.error||j.log||('HTTP '+r.status));error.status=r.status;throw error} return j;
 }
 const post=(path,obj)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj||{})});
 function toast(t,ms=2500){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms)}
@@ -198,13 +262,18 @@ async function renderView(){
   if(TAB==='rules'){const r=await api('/api/rules');v.innerHTML=`<div class="md">${md(r.markdown)}</div>`;return}
   if(!ST.has_output){v.innerHTML='<div class="empty">还没有生成结果，先完成左侧 ①②③</div>';return}
   v.innerHTML='<div class="empty">加载中…</div>';
-  const t=cache[TAB]||(cache[TAB]=await api(`/api/p/${enc(P)}/table/${TAB}`));
+  const project=P,tab=TAB;
+  const t=cache[tab]||await api(`/api/p/${enc(project)}/table/${tab}`);
+  if(P!==project||TAB!==tab)return;
+  cache[tab]=t;
+  if(TAB==='questions') return renderQuestions(t);
   renderTable(t);
 }
 function renderOverview(){
   const c=ST.counts||{};
   const blk=(title,o)=>o&&Object.keys(o).length?`<h3>${title}</h3><table>${Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<tr><td>${pill(k)}</td><td style="width:80px">${n}</td></tr>`).join('')}</table>`:'';
   $('#view').innerHTML=ST.has_output?`<div style="max-width:900px">
+    ${ST.migration&&!ST.migration.ready?`<p style="padding:12px;background:var(--warn-bg);color:var(--warn)"><b>通用识别核对稿</b>：已识别 ${esc(ST.migration.points)} 个点，待判断 ${esc(ST.migration.questions)} 项。当前程序保留旧表达式，尚未完成迁移，请先查看「待判断」和「图纸疑点」。</p>`:''}
     <p class="toolbar hint">报告文件：${esc(ST.report||'')}　·　项目目录：${esc(ST.dir)}</p>
     ${blk('改动',c['改动分类'])}${blk('清算（需要看的）',c['清算分类'])}${blk('对点结果',c['对点结果'])}</div>`
     :'<div class="empty">按左侧 ① 读旧程序 → ② 选图纸 → ③ 对点并生成</div>';
@@ -227,7 +296,7 @@ function renderTable(t){
   if(KIND.__t!==t){KIND={__t:t}}
   const cols=t.columns, rows=t.rows;
   if(!cols.length){$('#view').innerHTML='<div class="empty">没有数据</div>';return}
-  const stIdx=0, edit=TAB==='results';
+  const stIdx=0, adaptive=TAB==='results'&&!!ST.migration, edit=TAB==='results'&&!adaptive;
   const ci=n=>cols.indexOf(n);
   const sts=[...new Set(rows.map(r=>r[stIdx]))].sort();
   const q=FILTER.q.toLowerCase();
@@ -237,13 +306,20 @@ function renderTable(t){
   $('#view').innerHTML=`<div class="toolbar">
     <input placeholder="搜索线号/功能/变量…" value="${esc(FILTER.q)}" oninput="FILTER.q=this.value;FILTER.limit=400;renderTable(cache[TAB])" style="width:260px">
     <select onchange="FILTER.st=this.value;renderTable(cache[TAB])"><option value="">全部（${rows.length}）</option>${sts.map(s=>`<option ${s===FILTER.st?'selected':''} value="${esc(s)}">${esc(s)}（${rows.filter(r=>r[stIdx]===s).length}）</option>`).join('')}</select>
-    <span class="hint">显示 ${show.length}/${fr.length}　${edit?'· 直接在「你的判断」「备注」里填写，离开输入框自动保存，填完点左侧「重新生成」':''}${iomap?'· 点模块的「复制」得到 16 行变量名，粘到 I/O 映射该插槽 bit0 起':''}</span>
+    <span class="hint">显示 ${show.length}/${fr.length}　${adaptive?'· 此页用于查看结果；判断统一在「待判断处理」保存。备注只是记录，不会单独修改程序。':edit?'· 此旧格式项目在本表填写判断，保存后重新生成生效。备注只记录说明。':''}${iomap?'· 按实际通道核对映射':''}</span>
+    ${adaptive?'<button class="primary" onclick="setTab(\'questions\')">前往待判断处理</button>':''}
     <span style="flex:1"></span><button onclick="cache={};refresh()">刷新</button></div>
-  <table><thead><tr>${iomap?'<th></th>':''}${cols.map(c=>`<th class="${colKind(c,rows)==='num'?'num':''}">${esc(c)}</th>`).join('')}</tr></thead><tbody>
-  ${show.map((r,i)=>`<tr>${iomap?`<td>${(i===0||show[i-1][2]!==r[2])&&r[2]?`<button onclick="copyMod('${esc(r[2])}')">复制 ${esc(r[2])}</button>`:''}</td>`:''}${r.map((v,j)=>{
+  <table><thead><tr>${iomap?'<th></th>':''}${cols.map(c=>`<th class="${colKind(c,rows)==='num'?'num':''}">${c==='处理数据'?'操作':adaptive&&c==='你的判断'?'已记录的处理':adaptive&&c==='备注'?'处理备注（仅说明）':esc(c)}</th>`).join('')}</tr></thead><tbody>
+  ${show.map((r,i)=>`<tr class="${String(r[0]).startsWith('⚠')?'review-yellow':''}">${iomap?`<td>${(i===0||show[i-1][2]!==r[2])&&r[2]?`<button onclick="copyMod('${esc(r[2])}')">复制 ${esc(r[2])}</button>`:''}</td>`:''}${r.map((v,j)=>{
       const h=cols[j];
+      if(h==='处理数据'){
+        let meta={};try{meta=JSON.parse(v||'{}')}catch(e){}
+        return `<td>${meta.review_id?`<button onclick="undoReviewRow(${rows.indexOf(r)})">撤回并重算</button>`:TAB==='results'&&String(r[0]).startsWith('❓')?`<button onclick="openQuestionForRow(${rows.indexOf(r)})">处理此点</button>`:''}</td>`;
+      }
+      if(adaptive&&['你的判断','备注'].includes(h)&&ci('处理数据')>=0){let m={};try{m=JSON.parse(r[ci('处理数据')]||'{}')}catch(e){}return `<td>${esc(h==='你的判断'?(m.review_id?(Q_ACTIONS[m.action?.action]||v):(v||'按自动规则')):(m.review_id?m.action?.remark||'':v))}</td>`}
       if(edit&&(h==='你的判断'||h==='备注')) return `<td><input value="${esc(v)}" data-r="${rows.indexOf(r)}" data-h="${esc(h)}" onchange="saveFb(this)"></td>`;
       if(j===0&&typeof v!=='number'&&v!=='') return `<td class="st">${pill(v)}</td>`;
+      if(h==='相似度'&&typeof v==='number') return `<td class="num">${(v*100).toFixed(1)}%</td>`;
       const k=colKind(h,rows);
       return `<td class="${k}">${esc(v)}</td>`}).join('')}</tr>`).join('')}
   </tbody></table>${fr.length>show.length?`<p><button onclick="FILTER.limit+=1000;renderTable(cache[TAB])">再显示 1000 行</button></p>`:''}`;
@@ -254,7 +330,337 @@ async function saveFb(inp){
   try{const j=await post(`/api/p/${enc(P)}/feedback`,{wire:g('图纸原线号'),function:g('图纸功能'),var:g('程序变量'),judge:g('你的判断'),remark:g('备注')});
     inp.classList.add('saved');toast(`已保存（共 ${j.count} 条判断），改完点「重新生成」`);ST.feedback=j.count;renderCards()}catch(e){toast('保存失败：'+e.message)}
 }
+
+let Q_TASKS=[], Q_DRAFT=new Map(), Q_PICKED=new Set(), Q_CATALOG={project:null,rows:[]};
+let Q_FILTER={q:'',kind:'',group:'',station:'',module:'',state:'todo',limit:200,mode:'table',order:'group'}, qFilterTimer=null;
+let Q_OPEN=null,Q_BATCH=null,Q_BUSY=false,Q_PROJECT=null;
+let Q_BATCH_ACTION='',Q_BATCH_SETTINGS={template:'{类型}_{从站}_{功能}',workstation:'',section:''};
+const Q_ACTIONS={confirm:'图纸功能没变，保留这个变量',source:'改用一条已有变量映射',new:'按图纸新建变量',unused:'此点不使用，停用旧映射',ignore:'排除此处图纸错误/重复记录',address:'修正图纸写错的线号',keep_module:'这个旧模块仍使用，整组保留',comment_module:'新项目不需要此模块，整组停用',defer:'暂不确定，留待以后'};
+// REVIEW_LOGIC_START
+const Q_GROUPS={
+  missing:{title:'图纸有功能，缺少旧映射',guide:'先看是否有可复用的旧变量；如果实际需要这些新点，可按图纸批量新建变量，并指定放入哪个程序段。'},
+  spare:{title:'旧备用点变成新功能',guide:'旧变量只是备用，图纸现在有具体功能。需要使用时可按图纸批量新建变量；明确不使用才选停用。'},
+  naming:{title:'同地址，功能名称差异较大',guide:'逐组对照旧变量和图纸功能。如果只是叫法不同，可整组确认保留；功能实际改变时，应改用已有变量或新建变量。'},
+  direction:{title:'侧别、启停或方向冲突',guide:'这些是明确含义冲突，不只是名字相似。先看原图和旧代码，确认哪一侧/哪个方向正确，再选择保留、换映射或更正线号。'},
+  duplicate:{title:'同一地址有多条旧赋值',guide:'展开原文，选择实际应生效的那一条；采用后其他同地址旧赋值会被注释。这类问题不宜盲目整组确认。'},
+  drawing:{title:'图纸线号重复/图纸疑点',guide:'先确认是否写错线号。写错就更正；重复或无效记录才排除。排除图纸记录不会停用整台设备。'},
+  module:{title:'旧模块未在新图纸对应',guide:'按模块一次处理：新项目仍需使用则整组保留；确定取消该模块才整组停用。'},
+  other:{title:'其他待核对问题',guide:'查看原因和程序原文，选择能说明实际情况的处理方式；无法确定时暂缓。'}
+};
+const Q_GROUP_ORDER=['missing','naming','spare','duplicate','direction','drawing','module','other'];
+function questionGroup(t){
+  if(t.kind==='module')return 'module';if(Q_GROUPS[t.problem_group])return t.problem_group;const reason=t.problem_reason||t.reason||'';
+  if(/图纸地址重复|图纸.*作废|未完整识别/.test(reason))return 'drawing';
+  if(/多处赋值|多条.*赋值/.test(reason))return 'duplicate';
+  if(/方向或设备不一致|方向冲突|侧别/.test(reason))return 'direction';
+  if(/备用/.test(t.var||'')&&!/^(备用|预留|未用|NC)$/.test(t.function||''))return 'spare';
+  if(/未找到同地址|图纸有点/.test(reason)&&!t.var)return 'missing';
+  if(t.var)return 'naming';return 'other';
+}
+function questionReason(t){return t.problem_reason||t.reason||''}
+function orderQuestions(tasks,mode='group'){
+  const text=(a,b)=>String(a??'').localeCompare(String(b??''),'zh-CN',{numeric:true});
+  return [...tasks].sort((a,b)=>{
+    if(mode==='drawing')return Number(a.page||0)-Number(b.page||0)||text(a.wire,b.wire)||text(a.id,b.id);
+    const sa=questionScope(a),sb=questionScope(b);
+    return Q_GROUP_ORDER.indexOf(questionGroup(a))-Q_GROUP_ORDER.indexOf(questionGroup(b))||text(sa.station,sb.station)||text(sa.kind,sb.kind)||text(sa.module,sb.module)||
+      Number(sa.channel||0)-Number(sb.channel||0)||Number(a.page||0)-Number(b.page||0)||text(a.wire,b.wire)||text(a.id,b.id);
+  });
+}
+function selectQuestionGroup(tasks,filter,group,isQueued){return filterQuestions(tasks,filter,isQueued).filter(t=>questionGroup(t)===group)}
+function questionScope(t){
+  let station=t.station||'',module=t.module||'',channel=t.channel??'',kind=t.signal_kind||'',scheme=t.address_scheme||'';
+  if(t.kind==='module'&&t.identity){scheme=t.identity[0];kind=t.identity[1];station=t.identity[2];module=t.identity[3]}
+  const wire=t.target_wire||t.wire||'';
+  let m=wire.match(/^([A-Z]+\d+)_([IQO])(\d+)_(\d+)$/);
+  if(m){station=station||m[1];module=module||String(+m[3]);channel=channel===''?+m[4]:channel;kind=kind||(m[2]==='I'?'DI':'DO')}
+  m=wire.match(/^([A-Z]+\d+)_(\d+)(AI|AQ|AO)(\d+)/);
+  if(m){station=station||m[1];module=module||String(+m[2]);channel=channel===''?+m[4]:channel;kind=kind||(m[3]==='AI'?'AI':'AO')}
+  return {station,module,channel,kind,scheme,moduleKey:module?`${station||'未标从站'}/${kind}/模块${module}`:''};
+}
+function filterQuestions(tasks,filter,isQueued){
+  const q=(filter.q||'').toLowerCase();
+  return tasks.filter(t=>{const s=questionScope(t);return (!filter.kind||t.kind===filter.kind)&&
+    (!filter.group||questionGroup(t)===filter.group)&&(!filter.station||s.station===filter.station)&&(!filter.module||s.moduleKey===filter.module)&&
+    (filter.state!=='todo'||!isQueued(t))&&(filter.state!=='saved'||isQueued(t))&&
+    (!q||[t.wire,t.function,t.var,t.reason,t.problem_reason,t.section].join(' ').toLowerCase().includes(q))});
+}
+function commonBatchActions(tasks){
+  if(!tasks.length)return [];
+  return ['confirm','new','source','unused','keep_module','comment_module','ignore','defer'].filter(a=>tasks.every(t=>t.options.some(o=>o.value===a))&&
+    (a!=='source'||tasks.every(t=>(t.sources||[]).filter(s=>s.simple&&s.kind===t.signal_kind).length===1)));
+}
+function batchNewName(t,template,workstation){
+  const s=questionScope(t),kind=s.kind;
+  const types=s.scheme==='legacy'?{DI:'ID',DO:'OD',AI:'AD',AO:'DA'}:{DI:'DI',DO:'DQ',AI:'AI',AO:'AQ'};
+  const clean=x=>String(x??'').replace(/[^A-Za-z0-9_\u4e00-\u9fff]/g,'');
+  const parts={'类型':types[kind]||kind,'从站':s.station,'模块':s.module,'通道':s.channel,'功能':clean(t.function),'工位':clean(workstation)};
+  if(template.includes('{工位}')&&!parts['工位'])throw new Error('模板含工位，请填写工位名称');
+  if(/\{([^}]+)\}/g.test(template.replace(/\{(类型|从站|模块|通道|功能|工位)\}/g,'')))throw new Error('命名模板有未知字段');
+  return template.replace(/\{(类型|从站|模块|通道|功能|工位)\}/g,(_,k)=>parts[k]);
+}
+function batchItems(tasks,action,settings){
+  return tasks.map(t=>{
+    const values={...(settings.valuesFor?.(t)||{})};
+    if(action==='new'){values.var=batchNewName(t,settings.template||'{类型}_{从站}_{功能}',settings.workstation||'');values.section=settings.section||''}
+    if(action==='source'){const sources=(t.sources||[]).filter(s=>s.simple&&s.kind===t.signal_kind);if(sources.length!==1)throw new Error('存在不唯一的候选，需逐项处理');values.source={section:sources[0].section,line:sources[0].line}}
+    return {task:t,draft:{action,values,remark:settings.remarkFor?.(t)||''}};
+  });
+}
+// REVIEW_LOGIC_END
+function qLocalKey(){return 'sysmac.review.pending.v1:'+P}
+let Q_LOCAL_CACHE={key:null,raw:null,value:{}};
+function qLocal(){try{const key=qLocalKey(),raw=localStorage.getItem(key)||'{}';if(Q_LOCAL_CACHE.key!==key||Q_LOCAL_CACHE.raw!==raw)Q_LOCAL_CACHE={key,raw,value:JSON.parse(raw)};return Q_LOCAL_CACHE.value}catch(e){return {}}}
+function qWriteLocal(id,value){try{const s={...qLocal()};if(value)s[id]=value;else delete s[id];const raw=JSON.stringify(s),key=qLocalKey();localStorage.setItem(key,raw);Q_LOCAL_CACHE={key,raw,value:s}}catch(e){}}
+function qStored(t){const s=qLocal()[t.id];return s&&s.generation===t.generation?s:null}
+function qIsQueued(t){const s=qStored(t);return !!(s&&!s.reset)}
+function qDraft(t){
+  const key=P+':'+t.id+':'+t.generation;
+  if(!Q_DRAFT.has(key)){
+    const local=qStored(t), s=local?(local.reset?null:local):t.saved;
+    Q_DRAFT.set(key,{action:s?.action||'',values:{...(s?.values||{})},remark:s?.remark||'',query:''});
+  }
+  return Q_DRAFT.get(key);
+}
+function renderQuestions(t){
+  const metadata=t.columns.indexOf('处理数据');
+  if(metadata<0){
+    if(!t.rows.length){$('#view').innerHTML='<div class="empty">当前没有待判断项。</div>';return}
+    $('#view').innerHTML='<div class="q-toolbar"><b>此项目使用原格式报告</b><p class="guide">在「对点结果」填写“你的判断”和备注，保存后重新生成。可按线号搜索定位。</p><button class="primary" onclick="setTab(\'results\')">打开对点结果填写判断</button><button onclick="runAll(false)">应用判断并重新生成</button></div><div id="legacyquestions"></div>';
+    const div=document.createElement('table');const body=document.createElement('tbody');
+    for(const row of t.rows.slice(0,100)){const tr=document.createElement('tr');const td=document.createElement('td');td.textContent=row.join(' · ');tr.append(td);body.append(tr)}
+    div.append(body);$('#legacyquestions').append(div);return;
+  }
+  if(Q_PROJECT!==P){Q_PICKED.clear();Q_OPEN=null;Q_BATCH=null;Q_BATCH_ACTION='';Q_BATCH_SETTINGS={template:'{类型}_{从站}_{功能}',workstation:'',section:''};Q_PROJECT=P}
+  Q_TASKS=t.rows.map(r=>{try{return JSON.parse(r[metadata])}catch(e){return null}}).filter(Boolean);
+  const ids=new Set(Q_TASKS.map(t=>t.id));Q_PICKED=new Set([...Q_PICKED].filter(id=>ids.has(id)));
+  const total=Q_TASKS.length,queued=Q_TASKS.filter(qIsQueued).length;
+  const filtered=qFiltered(),shown=filtered.slice(0,Q_FILTER.limit),index=new Map(Q_TASKS.map((t,i)=>[t.id,i]));
+  const groups=new Map();for(const task of Q_TASKS){const g=questionGroup(task);groups.set(g,(groups.get(g)||0)+1)}
+  const scoped=filterQuestions(Q_TASKS,{...Q_FILTER,group:''},qIsQueued),scopeCounts=new Map();for(const task of scoped){const g=questionGroup(task);scopeCounts.set(g,(scopeCounts.get(g)||0)+1)}
+  const stations=[...new Set(Q_TASKS.map(t=>questionScope(t).station).filter(Boolean))].sort();
+  const modules=[...new Set(Q_TASKS.filter(t=>!Q_FILTER.station||questionScope(t).station===Q_FILTER.station).map(t=>questionScope(t).moduleKey).filter(Boolean))].sort();
+  const outside=Q_PICKED.size-filtered.filter(t=>Q_PICKED.has(t.id)).length;
+  const selected=Q_TASKS.filter(t=>Q_PICKED.has(t.id));
+  const sections=selected.length?selected[0].sections.filter(s=>selected.every(t=>t.sections.includes(s))):[];
+  if(!qBatchOptions().includes(Q_BATCH_ACTION))Q_BATCH_ACTION='';
+  const guide=Q_FILTER.group?Q_GROUPS[Q_FILTER.group]:null;
+  $('#view').innerHTML=`<div class="q-toolbar q-table-toolbar">
+    <p class="guide"><b>判断只在本页处理；“对点结果”只用于查看。</b> 先按类型/从站筛选 → 选中整组 → 预览批量处理 → 保存并统一生成。备注只记录说明，不会单独改变程序。</p>
+    <div class="toolbar"><input id="qsearch" aria-label="搜索待判断" placeholder="搜索线号、功能或程序段…" value="${esc(Q_FILTER.q)}" oninput="qFilterInput(this)">
+    <select aria-label="问题类型" onchange="qShowGroup(this.value)"><option value="">全部问题类型（${total}）</option>${Q_GROUP_ORDER.filter(g=>groups.has(g)).map(g=>`<option value="${g}" ${Q_FILTER.group===g?'selected':''}>${esc(Q_GROUPS[g].title)} · ${groups.get(g)}</option>`).join('')}</select>
+    <select aria-label="按从站筛选" onchange="Q_FILTER.station=this.value;Q_FILTER.module='';renderQuestions(cache.questions)"><option value="">全部从站</option>${stations.map(s=>`<option value="${esc(s)}" ${Q_FILTER.station===s?'selected':''}>${esc(s)}</option>`).join('')}</select>
+    <select aria-label="按模块筛选" onchange="Q_FILTER.module=this.value;renderQuestions(cache.questions)"><option value="">全部模块</option>${modules.map(s=>`<option value="${esc(s)}" ${Q_FILTER.module===s?'selected':''}>${esc(s)}</option>`).join('')}</select>
+    <select aria-label="处理状态筛选" onchange="Q_FILTER.state=this.value;renderQuestions(cache.questions)"><option value="todo" ${Q_FILTER.state==='todo'?'selected':''}>尚需处理 ${total-queued}</option><option value="saved" ${Q_FILTER.state==='saved'?'selected':''}>已保存待应用 ${queued}</option><option value="all" ${Q_FILTER.state==='all'?'selected':''}>全部未消除 ${total}</option></select>
+    <select aria-label="显示条数" onchange="Q_FILTER.limit=Number(this.value);renderQuestions(cache.questions)">${[100,200,500,1000000].map(n=>`<option value="${n}" ${Q_FILTER.limit===n?'selected':''}>${n===1000000?'显示全部':'显示 '+n+' 条'}</option>`).join('')}</select>
+    <select aria-label="查看方式" onchange="Q_FILTER.mode=this.value;renderQuestions(cache.questions)"><option value="table" ${Q_FILTER.mode==='table'?'selected':''}>紧凑表格</option><option value="cards" ${Q_FILTER.mode==='cards'?'selected':''}>详细卡片</option></select>
+    <select aria-label="排列方式" onchange="Q_FILTER.order=this.value;renderQuestions(cache.questions)"><option value="group" ${Q_FILTER.order!=='drawing'?'selected':''}>按问题类型分组</option><option value="drawing" ${Q_FILTER.order==='drawing'?'selected':''}>按图纸顺序排列</option></select></div>
+    <nav class="q-group-nav" aria-label="快速切换问题分类"><button class="${Q_FILTER.group?'':'on'}" onclick="qShowGroup('')">全部类别 · ${scoped.length}</button>${Q_GROUP_ORDER.filter(g=>scopeCounts.has(g)).map(g=>`<button class="${Q_FILTER.group===g?'on':''}" onclick="qShowGroup('${g}')">${esc(Q_GROUPS[g].title)} · ${scopeCounts.get(g)}</button>`).join('')}</nav>
+    ${guide?`<div class="q-group-guide"><b>${esc(guide.title)}：</b>${esc(guide.guide)}</div>`:'<div class="q-group-guide">同类问题默认排在一起，组内再按从站、模块、通道排列。点分类可单独查看；“选择整组”包含该组未显示的行，并遵从当前筛选。暂缓处理不改变原始问题分类。</div>'}
+    <div class="toolbar"><button onclick="qSelectShown()">仅选本页 ${shown.length} 项</button><button onclick="qSelectFiltered()">仅选全部筛选结果 ${filtered.length} 项</button><button onclick="Q_PICKED.clear();renderQuestions(cache.questions)">清空选择</button>
+    <span class="hint">显示 ${shown.length}/${filtered.length}；已选 ${Q_PICKED.size}${outside?'（含筛选外 '+outside+' 项）':''}</span><span style="flex:1"></span><button class="primary" ${ST.job?.running||Q_BUSY?'disabled':''} onclick="runAll(false)">应用已存判断并重新生成</button></div>
+    <div class="toolbar"><select id="qbatch" aria-label="批量处理方式" ${selected.length?'':'disabled'} onchange="qBatchConfig(this.value)"><option value="">${selected.length?'选择这组的处理方式…':'先勾选要处理的行'}</option>${qBatchOptions().map(o=>`<option value="${o}" ${Q_BATCH_ACTION===o?'selected':''}>${o==='source'?'采用每行唯一候选（先预览）':esc(Q_ACTIONS[o])}</option>`).join('')}</select>
+    <button id="qbatch-preview" ${selected.length?'':'disabled'} onclick="qSaveBatch()">预览选中项的批量处理</button><span class="hint">只提供所有选中项都支持的操作；先预览，不会直接执行。</span></div>
+    <div id="qbatch-config" class="q-batch-config" ${Q_BATCH_ACTION==='new'?'':'hidden'}>
+      <div class="q-form"><label>变量名模板<input id="qname-template" value="${esc(Q_BATCH_SETTINGS.template)}" aria-label="批量变量名模板" oninput="Q_BATCH_SETTINGS.template=this.value"></label>
+      <label>工位（模板使用 {工位} 时填写）<input id="qworkstation" aria-label="批量工位" value="${esc(Q_BATCH_SETTINGS.workstation)}" oninput="Q_BATCH_SETTINGS.workstation=this.value"></label>
+      <label>新增到哪个程序段<select id="qnew-section" aria-label="批量新增程序段" onchange="Q_BATCH_SETTINGS.section=this.value"><option value="">请选择目标程序段…</option>${sections.map(s=>`<option value="${esc(s)}" ${Q_BATCH_SETTINGS.section===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label></div>
+      <div class="q-help">模板可用：{类型}、{从站}、{模块}、{通道}、{功能}、{工位}。预览中可逐行改名和调整程序段；同名会拦截，不会自动加奇怪后缀。</div>
+    </div></div>
+    ${Q_FILTER.mode==='table'?qCompactTable(shown,index):`<div class="q-list">${shown.map((t,i)=>`${Q_FILTER.order!=='drawing'&&(!i||questionGroup(t)!==questionGroup(shown[i-1]))?`<div class="q-group-section">${qGroupHeading(questionGroup(t),shown.filter(x=>questionGroup(x)===questionGroup(t)).length)}</div>`:''}${qCard(t,index.get(t.id))}`).join('')}</div>`}
+    ${!shown.length?`<div class="empty">${queued?'已保存的处理等待应用，点击上方“应用已存判断并重新生成”。':total?'当前筛选没有结果。':'没有待判断项；已处理内容可在对点结果行末撤回。'}</div>`:''}
+    ${filtered.length>shown.length?`<p><button onclick="Q_FILTER.limit=1000000;renderQuestions(cache.questions)">显示全部 ${filtered.length} 项</button></p>`:''}
+    <dialog id="qdetail" class="q-dialog" aria-label="单项判断处理"></dialog><dialog id="qpreview" class="q-dialog" aria-label="批量处理预览"></dialog>`;
+  if(Q_FILTER.mode==='cards')for(const t of shown){const i=index.get(t.id);if(qDraft(t).action==='source')qPopulateSources(i)}
+  if(Q_OPEN&&ids.has(Q_OPEN))qShowDetail(index.get(Q_OPEN));
+}
+function qFiltered(){return orderQuestions(filterQuestions(Q_TASKS,Q_FILTER,qIsQueued),Q_FILTER.order)}
+function qShowGroup(group){Q_FILTER.group=group;Q_OPEN=null;renderQuestions(cache.questions)}
+function qSelectGroup(group){const tasks=selectQuestionGroup(Q_TASKS,Q_FILTER,group,qIsQueued);Q_PICKED=new Set(tasks.map(t=>t.id));renderQuestions(cache.questions);toast(`已选本类全部 ${tasks.length} 项（含未显示项）`)}
+function qGroupHeading(group,shown){const tasks=selectQuestionGroup(Q_TASKS,Q_FILTER,group,qIsQueued),picked=tasks.filter(t=>Q_PICKED.has(t.id)).length;
+  return `<div class="q-group-heading"><b>${esc(Q_GROUPS[group].title)}</b><span>共 ${tasks.length} 项 · 已显示 ${shown} 项${picked?' · 已选 '+picked+' 项':''}</span><button aria-label="选择整组 ${esc(Q_GROUPS[group].title)} ${tasks.length} 项" onclick="qSelectGroup('${group}')">选择整组 ${tasks.length} 项</button>${Q_FILTER.group?'':`<button onclick="qShowGroup('${group}')">只看本类</button>`}</div>`;
+}
+function qReasonHtml(t){const original=questionReason(t);return `${esc(original)}${t.reason&&t.reason!==original?`<div class="q-sub">当前处理：${esc(t.reason)}</div>`:''}`}
+function qCompactTable(tasks,index){
+  if(!tasks.length)return '';
+  return `<div class="q-compact-wrap"><table class="q-compact"><thead><tr><th class="q-check">选</th><th class="q-point">图纸点位 / 功能</th><th class="q-old">当前旧变量 / 原文</th><th class="q-issue">为什么要处理 / 建议</th><th class="q-op">状态 / 操作</th></tr></thead><tbody>${tasks.map(t=>{
+    const i=index.get(t.id),group=Q_GROUPS[questionGroup(t)],queued=qIsQueued(t),draft=qDraft(t);
+    return `<tr class="${Q_PICKED.has(t.id)?'selected ':''}${queued?'queued':''}" data-task-id="${esc(t.id)}"><td><input aria-label="选择 ${esc(t.wire)}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)"></td>
+      <td><span class="q-code"><b>${esc(t.wire)}</b></span> <span class="q-sub">${t.page?'P'+esc(t.page):''}</span><div>${esc(t.function)}</div><div class="mobile-issue q-sub">${esc(group.title)}</div></td>
+      <td class="q-old"><div class="q-code">${esc(t.var||((t.sources||[]).length>1?'有 '+t.sources.length+' 条候选':'没有同地址旧映射'))}</div><div class="q-sub">${esc(t.section||questionScope(t).moduleKey)}</div></td>
+      <td class="q-issue"><b>${esc(group.title)}</b><div class="q-sub">${qReasonHtml(t)}</div></td>
+      <td class="q-op"><span class="q-tag ${queued?'saved':''}">${queued?'已保存待应用':t.saved?.action==='defer'?'已暂缓':t.saved?'需修正处理':'待处理'}</span><button onclick="qShowDetail(${i})">看建议 / 处理</button></td></tr>`;
+  }).map((row,i)=>Q_FILTER.order!=='drawing'&&(!i||questionGroup(tasks[i])!==questionGroup(tasks[i-1]))?`<tr class="q-group-row"><td colspan="5">${qGroupHeading(questionGroup(tasks[i]),tasks.filter(t=>questionGroup(t)===questionGroup(tasks[i])).length)}</td></tr>${row}`:row).join('')}</tbody></table></div>`;
+}
+function qTogglePick(i,on){const t=Q_TASKS[i];on?Q_PICKED.add(t.id):Q_PICKED.delete(t.id);renderQuestions(cache.questions)}
+function qShowDetail(i){const t=Q_TASKS[i];if(!t)return;Q_OPEN=t.id;const dialog=$('#qdetail'),group=Q_GROUPS[questionGroup(t)];
+  dialog.innerHTML=`<div class="q-dialog-head"><h3>处理 ${esc(t.wire)}</h3><button onclick="Q_OPEN=null;$('#qdetail').close()">关闭</button></div><div class="q-guide-box"><b>${esc(group.title)}</b><br>${esc(group.guide)}</div>${qCard(t,i,true)}`;
+  if(!dialog.open)dialog.showModal();if(qDraft(t).action==='source')qPopulateSources(i);
+  dialog.oncancel=()=>{Q_OPEN=null};
+}
+function qBatchConfig(action){Q_BATCH_ACTION=action;$('#qbatch-config').hidden=action!=='new'}
+function qCard(t,i,inDialog=false){
+  const d=qDraft(t),queued=qIsQueued(t),saved=t.saved;
+  return `<article class="q-card ${queued?'queued':''}" data-task-id="${esc(t.id)}"><div class="q-head">
+    ${inDialog?'':`<input aria-label="选择 ${esc(t.wire)}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)">`}
+    <b>${esc(t.wire)}</b><span>${esc(t.function)}</span><span class="q-tag ${queued?'saved':''}">${queued?'已保存，待应用':saved?.action==='defer'?'已暂缓':saved?'上次处理尚未消除问题':'尚未处理'}</span></div>
+    <div class="q-loc">${t.page?'PDF 第 '+esc(t.page)+' 页 · ':''}${esc(t.section||'未指定程序段')}${t.line?' · 第 '+esc(t.line)+' 行':''}</div>
+    <div class="q-reason">${qReasonHtml(t)}</div>
+    ${t.raw?`<details><summary>查看旧程序原文${t.kind==='module'?'（整组）':''}</summary><pre class="q-context">${esc(t.raw)}</pre></details>`:''}
+    <div class="q-form"><label>根据实际情况选择<select aria-label="处理方式 ${esc(t.wire)}" onchange="qChangeAction(${i},this.value)"><option value="">请选择实际情况…</option>${t.options.map(o=>`<option value="${o.value}" ${d.action===o.value?'selected':''}>${esc(Q_ACTIONS[o.value]||o.label)}</option>`).join('')}</select></label>
+    ${qFields(t,i,d)}<label class="wide">备注（可选）<input aria-label="备注 ${esc(t.wire)}" value="${esc(d.remark)}" oninput="qDraft(Q_TASKS[${i}]).remark=this.value"></label></div>
+    <div class="q-actions"><button class="primary" onclick="qSave(${i},false,this)">保存处理</button><button onclick="qSave(${i},true,this)">保存并重新生成</button>
+    ${queued||saved?`<button onclick="qReset(${i},this)">撤回已存处理</button>`:''}
+    ${(t.view_section||t.section)&&t.kind==='point'?`<button onclick="qViewProgram(${i})">查看程序段</button>`:''}
+    <span>${qActionHelp(d.action,t)}</span></div></article>`;
+}
+function qFields(t,i,d){
+  let html='';
+  if(d.action==='source')html=`<label>搜索旧变量或程序段<input aria-label="搜索旧映射 ${esc(t.wire)}" value="${esc(d.query)}" oninput="qDraft(Q_TASKS[${i}]).query=this.value;qPopulateSources(${i})"></label><label class="wide">选择旧映射<select id="qsource-${i}" aria-label="选择旧映射 ${esc(t.wire)}" onchange="qChooseSource(${i},this.value)"><option>加载可用映射…</option></select></label><pre id="qpreview-${i}" class="q-context" style="width:100%"></pre>`;
+  if(d.action==='new')html=`<label>新全局变量名<input aria-label="新变量名 ${esc(t.wire)}" placeholder="例如 DI_放卷_到位检测" value="${esc(d.values.var||'')}" oninput="qDraft(Q_TASKS[${i}]).values.var=this.value"></label><label>放入程序段<select aria-label="新增程序段 ${esc(t.wire)}" onchange="qDraft(Q_TASKS[${i}]).values.section=this.value"><option value="">请选择…</option>${t.sections.map(s=>`<option value="${esc(s)}" ${d.values.section===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label><span class="q-help">${['DI','DO'].includes(t.signal_kind)?'新变量为 BOOL':'新变量为 INT，直接读写原始模拟量'}</span>`;
+  if(d.action==='address')html=`<label>更正后的图纸线号<input aria-label="更正线号 ${esc(t.wire)}" placeholder="例如 D2_Q1_08" value="${esc(d.values.address||'')}" oninput="qDraft(Q_TASKS[${i}]).values.address=this.value"></label>`;
+  if(d.values.address&&d.action!=='address')html+=`<span class="q-help">沿用已更正线号：${esc(d.values.address)}</span>`;
+  return html;
+}
+function qActionHelp(action,t){return ({confirm:'保留当前变量及完整表达式。',source:'保留所选行的完整表达式并接到目标线号；目标的其他旧赋值将被注释。',new:'生成变量声明和映射语句（数字量 BOOL；模拟量 INT 原始值，换算需另行处理）；目标的旧赋值将被注释。',unused:'有旧映射则注释，没有则不新增。',ignore:'仅排除此处图纸记录；不代表整台设备停用。',address:'重新按更正后的线号对点；如果功能仍有差异，会继续提示。',keep_module:'此模块保留原逻辑，不再逐点要求判断。',comment_module:'生成时会注释本组所有映射。',defer:'保存备注，仍保留在待判断中。'})[action]||'选择处理方式后保存。'}
+function qViewProgram(i){const t=Q_TASKS[i];secCur=qDraft(t).values.source?.section||t.view_section||t.section;Q_OPEN=null;$('#qdetail')?.close();setTab('sections')}
+function qChangeAction(i,value){const t=Q_TASKS[i];qDraft(t).action=value;if(Q_OPEN===t.id)qShowDetail(i);else renderQuestions(cache.questions)}
+function qFilterInput(el){Q_FILTER.q=el.value;clearTimeout(qFilterTimer);const pos=el.selectionStart;qFilterTimer=setTimeout(()=>{renderQuestions(cache.questions);const e=$('#qsearch');if(e){e.focus();e.setSelectionRange(pos,pos)}},180)}
+function qSelectShown(){Q_PICKED=new Set(qFiltered().slice(0,Q_FILTER.limit).map(t=>t.id));renderQuestions(cache.questions)}
+function qSelectFiltered(){Q_PICKED=new Set(qFiltered().map(t=>t.id));renderQuestions(cache.questions)}
+function qBatchOptions(){return commonBatchActions(Q_TASKS.filter(t=>Q_PICKED.has(t.id)))}
+async function qCatalog(){
+  const generation=Q_TASKS[0]?.generation;
+  if(Q_CATALOG.project===P&&Q_CATALOG.generation===generation)return Q_CATALOG.rows;
+  const project=P;const tables=await Promise.all(['results','extra'].map(k=>cache[k]?Promise.resolve(cache[k]):api(`/api/p/${enc(project)}/table/${k}`)));
+  const map=new Map(),appliedNames=new Set();
+  function add(s){if(s&&s.simple)map.set(s.section+':'+s.line,s)}
+  for(const t of tables){const j=t.columns.indexOf('处理数据');if(j>=0)for(const r of t.rows){try{const m=JSON.parse(r[j]||'{}');add(m.source);if(m.action?.action==='new'&&m.action.values?.var)appliedNames.add(m.action.values.var.toLowerCase())}catch(e){}}}
+  for(const t of Q_TASKS)for(const s of t.sources||[])add(s);
+  const rows=[...map.values()].sort((a,b)=>a.section.localeCompare(b.section)||a.line-b.line);
+  if(P===project)Q_CATALOG={project,generation,rows,appliedNames};return rows;
+}
+async function qPopulateSources(i){
+  const project=P,t=Q_TASKS[i];if(!t)return;
+  try{const catalogue=await qCatalog();if(P!==project||TAB!=='questions'||Q_TASKS[i]?.id!==t.id)return;
+    const el=$('#qsource-'+i);if(!el)return;const d=qDraft(t),q=d.query.toLowerCase();
+    const preferred=new Set((t.sources||[]).map(s=>s.section+':'+s.line));
+    let matches=catalogue.map((s,n)=>({s,n})).filter(({s})=>s.kind===t.signal_kind&&(!q||[s.var,s.section,s.wire].join(' ').toLowerCase().includes(q)));
+    matches.sort((a,b)=>Number(preferred.has(b.s.section+':'+b.s.line))-Number(preferred.has(a.s.section+':'+a.s.line)));
+    const chosen=catalogue.findIndex(s=>s.section===d.values.source?.section&&s.line===d.values.source?.line);
+    let shown=matches.slice(0,40);if(chosen>=0&&!shown.some(x=>x.n===chosen))shown.unshift({s:catalogue[chosen],n:chosen});
+    el.innerHTML='<option value="">请选择旧映射…</option>'+shown.map(({s,n})=>`<option value="${n}" ${chosen===n?'selected':''}>${esc(s.wire+' · '+s.var+' · '+s.section+' 第'+s.line+'行')}</option>`).join('');
+    const preview=$('#qpreview-'+i);if(preview)preview.textContent=chosen>=0?catalogue[chosen].raw:matches.length?`找到 ${matches.length} 条可用映射，显示前 40 条；可输入旧变量名缩小范围。`:'没有同类型的可用映射，请更换关键词，或选择新建变量。';
+  }catch(e){toast('读取旧映射失败：'+e.message)}
+}
+async function qChooseSource(i,value){const project=P,t=Q_TASKS[i],catalogue=await qCatalog();if(P!==project||Q_TASKS[i]?.id!==t.id)return;const s=value===''?null:catalogue[+value];qDraft(t).values.source=s?{section:s.section,line:s.line}:null;qPopulateSources(i)}
+function qValidate(t,d){
+  if(!t.options.some(o=>o.value===d.action))throw new Error('先选择此项支持的处理方式');
+  if(d.action==='source'&&!d.values.source)throw new Error('请选择一条旧映射');
+  if(d.action==='new'){
+    if(!/^[A-Za-z_\u4e00-\u9fff][\w\u4e00-\u9fff]{0,119}$/.test((d.values.var||'').trim()))throw new Error('请填写合法的新变量名，不能含空格、括号或数组');
+    if(['TRUE','FALSE','IF','THEN','ELSE','END_IF','BOOL','INT','REAL','AND','OR','NOT','CASE','FOR'].includes(d.values.var.trim().toUpperCase()))throw new Error('新变量名不能使用 ST 保留字');
+    if(!t.sections.includes(d.values.section))throw new Error('请选择要新增到的程序段');
+  }
+  if(d.action==='address'&&!(d.values.address||'').trim())throw new Error('请填写更正后的线号');
+}
+async function qPersist(t,d,project){
+  qValidate(t,d);const values={};
+  if(d.values.address)values.address=d.values.address.trim();
+  if(d.action==='source')values.source=d.values.source;
+  if(d.action==='new'){values.var=d.values.var.trim();values.section=d.values.section}
+  const payload={action:d.action,values};
+  const saved=await post(`/api/p/${enc(project)}/feedback`,{wire:'@review:'+t.id,function:'',var:'',judge:JSON.stringify(payload),remark:d.remark});
+  if(P===project){qWriteLocal(t.id,{...payload,remark:d.remark,generation:t.generation});Q_DRAFT.set(P+':'+t.id+':'+t.generation,{...payload,remark:d.remark,query:''});ST.feedback=saved.count;Q_PICKED.delete(t.id)}
+}
+async function qSave(i,regenerate,button){
+  const t=Q_TASKS[i],d=qDraft(t),project=P;button.disabled=true;
+  try{await qPersist(t,d,project);if(P!==project)return;Q_OPEN=null;toast('处理已保存；重新生成后会应用并更新待判断名单');renderCards();renderQuestions(cache.questions);if(regenerate)await runAll(false)}catch(e){toast('未保存：'+e.message,4500)}finally{button.disabled=false}
+}
+async function qReset(i,button){const t=Q_TASKS[i],project=P;button.disabled=true;try{await post(`/api/p/${enc(project)}/feedback`,{wire:'@review:'+t.id});if(P!==project)return;qWriteLocal(t.id,{reset:true,generation:t.generation});Q_DRAFT.delete(P+':'+t.id+':'+t.generation);renderQuestions(cache.questions);toast('已撤回；重新生成后按原规则计算')}catch(e){toast(e.message)}finally{button.disabled=false}}
+async function qSaveBatch(){
+  const action=$('#qbatch').value,selected=Q_TASKS.filter(t=>Q_PICKED.has(t.id)),project=P;
+  if(!action||!qBatchOptions().includes(action))return toast('先勾选一组问题，再选择这组都支持的处理方式');
+  if(action==='new'&&!Q_BATCH_SETTINGS.section){$('#qnew-section').focus();return toast('先选择新增映射要放入哪个程序段')}
+  try{
+    const items=batchItems(selected,action,{...Q_BATCH_SETTINGS,valuesFor:t=>({...qDraft(t).values}),remarkFor:t=>qDraft(t).remark});
+    await qCatalog();if(P!==project)return;
+    Q_BATCH={project,action,items};qRenderBatch();
+  }catch(e){toast('无法预览：'+e.message,5000)}
+}
+function qBatchErrors(){
+  const errors=new Map(),batch=Q_BATCH;if(!batch)return errors;
+  const names=new Map(),sources=new Map(),selected=new Set(batch.items.map(x=>x.task.id));
+  const existing=new Set([...Q_CATALOG.rows.map(s=>s.var.toLowerCase()),...(Q_CATALOG.appliedNames||[])]);
+  const active=new Map(Q_TASKS.map(t=>[t.id,t.generation]));
+  const stored=Object.entries(qLocal()).filter(([id,s])=>!selected.has(id)&&active.get(id)===s.generation&&s.action==='new'&&!s.reset).map(([,s])=>(s.values.var||'').toLowerCase());
+  for(const item of batch.items){const id=item.task.id,d=item.draft;
+    try{qValidate(item.task,d)}catch(e){errors.set(id,e.message)}
+    if(d.action==='new'){
+      const key=(d.values.var||'').trim().toLowerCase();
+      if(existing.has(key)||stored.includes(key))errors.set(id,'与旧变量或其他已保存的新变量重名');
+      if(names.has(key)){errors.set(id,'本批次变量名重复，请修改');errors.set(names.get(key),'本批次变量名重复，请修改')}else names.set(key,id);
+    }
+    if(d.action==='source'){
+      const key=JSON.stringify(d.values.source);
+      if(sources.has(key)){errors.set(id,'多行选中了同一旧映射，需要逐项核对');errors.set(sources.get(key),'多行选中了同一旧映射，需要逐项核对')}else sources.set(key,id);
+    }
+  }
+  return errors;
+}
+function qRenderBatch(){
+  const b=Q_BATCH;if(!b)return;const dialog=$('#qpreview');
+  const stations=[...new Set(b.items.map(x=>questionScope(x.task).station).filter(Boolean))];
+  dialog.innerHTML=`<div class="q-dialog-head"><h3>批量处理预览 · ${b.items.length} 项</h3><button id="qbatch-cancel" ${Q_BUSY?'disabled':''} onclick="if(!Q_BUSY){$('#qpreview').close();Q_BATCH=null}">取消，不保存</button></div>
+    <div class="q-guide-box"><b>${esc(Q_ACTIONS[b.action])}</b><br>${qActionHelp(b.action)}<br>范围：${esc(stations.join('、')||'当前所选项')}；以下全部是已勾选项，与当前显示条数无关。${b.action==='new'?'可逐行修改变量名和程序段；重复名称不会自动改成奇怪后缀。':''}</div>
+    <div id="qbatch-errors" class="q-preview-error" style="margin:10px 0"></div>
+    <div class="q-preview-scroll"><table class="q-preview-table"><thead><tr><th>线号 / 图纸功能</th><th>${b.action==='new'?'将创建的变量名':'将执行的处理'}</th><th>${b.action==='new'?'放入程序段':'原变量 / 原表达式'}</th></tr></thead><tbody>
+    ${b.items.map(({task:t,draft:d},i)=>`<tr id="qbatch-row-${i}"><td><b>${esc(t.wire)}</b><div class="q-help">${esc(t.function)}</div><div id="qbatch-error-${i}" class="q-preview-error"></div></td>
+      <td>${d.action==='new'?`<input aria-label="预览变量名 ${i+1}" value="${esc(d.values.var)}" oninput="Q_BATCH.items[${i}].draft.values.var=this.value;qUpdateBatchErrors()">`:esc(Q_ACTIONS[d.action])}</td>
+      <td>${d.action==='new'?`<select aria-label="预览程序段 ${i+1}" onchange="Q_BATCH.items[${i}].draft.values.section=this.value;qUpdateBatchErrors()">${t.sections.map(s=>`<option value="${esc(s)}" ${s===d.values.section?'selected':''}>${esc(s)}</option>`).join('')}</select>`:`<span class="q-code">${esc(d.action==='source'?(t.sources||[]).find(s=>s.section===d.values.source?.section&&s.line===d.values.source?.line)?.raw||'':t.var||t.raw||'不修改表达式')}</span>`}</td></tr>`).join('')}</tbody></table></div>
+    <div class="q-actions"><button id="qbatch-save" class="primary" onclick="qExecuteBatch(false)">保存这 ${b.items.length} 项</button><button id="qbatch-apply" onclick="qExecuteBatch(true)">保存并统一生成</button><span id="qbatch-progress">预览不会修改程序；生成时会再次校验映射及变量冲突。</span></div>`;
+  qUpdateBatchErrors();dialog.oncancel=e=>{if(Q_BUSY)e.preventDefault();else Q_BATCH=null};if(!dialog.open)dialog.showModal();
+}
+function qUpdateBatchErrors(){
+  if(!Q_BATCH)return;const errors=qBatchErrors();
+  Q_BATCH.items.forEach(({task:t},i)=>{const message=errors.get(t.id)||'';$('#qbatch-error-'+i).textContent=message;$('#qbatch-row-'+i).classList.toggle('problem',!!message)});
+  $('#qbatch-errors').textContent=errors.size?`${errors.size} 项需修改，修正后才能保存。`:`${Q_BATCH.items.length} 项预览校验通过，等待你保存。`;
+  $('#qbatch-errors').classList.toggle('q-preview-ok',!errors.size);
+  $('#qbatch-save').disabled=Q_BUSY||errors.size>0;$('#qbatch-apply').disabled=Q_BUSY||errors.size>0;
+  $('#qbatch-cancel').disabled=Q_BUSY;
+  $('#qpreview').querySelectorAll('input,select').forEach(el=>el.disabled=Q_BUSY);
+}
+function qFeedbackPayload(t,d){
+  qValidate(t,d);const values={};if(d.values.address)values.address=d.values.address.trim();
+  if(d.action==='source')values.source=d.values.source;
+  if(d.action==='new'){values.var=d.values.var.trim();values.section=d.values.section}
+  return {wire:'@review:'+t.id,function:'',var:'',judge:JSON.stringify({action:d.action,values}),remark:d.remark};
+}
+async function qExecuteBatch(regenerate){
+  if(!Q_BATCH||Q_BUSY)return;const b=Q_BATCH,errors=qBatchErrors();if(errors.size)return qUpdateBatchErrors();
+  const items=b.items.map(({task,draft})=>qFeedbackPayload(task,draft));Q_BUSY=true;qUpdateBatchErrors();let done=0;
+  const progress=n=>{done=n;const el=$('#qbatch-progress');if(el)el.textContent=`正在保存 ${n}/${items.length} 项…`};
+  try{
+    let batchSupported=false;try{const doc=await api('/api');batchSupported=Object.keys(doc).some(k=>k.includes('/feedback_batch'))}catch(e){}
+    if(batchSupported){
+      const result=await post(`/api/p/${enc(b.project)}/feedback_batch`,{items});
+      if(P===b.project){for(const {task,draft} of b.items){qWriteLocal(task.id,{action:draft.action,values:draft.values,remark:draft.remark,generation:task.generation});Q_DRAFT.set(P+':'+task.id+':'+task.generation,{...draft,query:''});Q_PICKED.delete(task.id)}ST.feedback=result.count}
+      progress(items.length);
+    }else{
+      for(const {task,draft} of b.items){await qPersist(task,draft,b.project);progress(done+1)}
+    }
+    if(P!==b.project)return;Q_BATCH=null;Q_OPEN=null;Q_BUSY=false;$('#qpreview').close();renderCards();renderQuestions(cache.questions);toast(`已保存 ${done} 项${regenerate?'，正在统一生成':'，可统一应用判断'}`);
+    if(regenerate)await runAll(false);
+  }catch(e){toast(`已保存 ${done} 项，剩余未保存：${e.message}`,6000)}
+  finally{Q_BUSY=false;if(Q_BATCH)qUpdateBatchErrors()}
+}
+function openQuestionForRow(i){const t=cache[TAB],j=t.columns.indexOf('图纸原线号');Q_FILTER.q=String(t.rows[i][j]||'');Q_FILTER.state='all';setTab('questions')}
+async function undoReviewRow(i){
+  const project=P,t=cache[TAB],m=JSON.parse(t.rows[i][t.columns.indexOf('处理数据')]||'{}');if(!m.review_id)return;
+  try{await post(`/api/p/${enc(project)}/feedback`,{wire:'@review:'+m.review_id});if(P!==project)return;qWriteLocal(m.review_id,null);cache={};toast('已撤回，正在重新生成');await runAll(false)}catch(e){toast('撤回失败：'+e.message)}
+}
 async function copyMod(mod){
+  if(ST.migration){toast('通用格式请按报告中的实际通道逐项映射，暂不提供整模块复制');return}
   const t=cache.iomap, names=t.rows.filter(r=>r[2]===mod).map(r=>r[4]).join('\r\n');
   await navigator.clipboard.writeText(names); toast(`已复制 ${mod} 的变量名，粘到 I/O 映射对应插槽 bit0 起`);
 }
@@ -271,6 +677,7 @@ async function renderSections(){
     <div class="codewrap">${showOld?`<div class="pane"><h4>旧程序</h4><pre>${render(s.old)}</pre></div>`:''}<div class="pane"><h4>新程序 · ${esc(secCur)}</h4><pre>${render(s.new)}</pre></div></div></div>`;
 }
 function renderPaste(){
+  if(ST.migration&&!ST.migration.ready){$('#view').innerHTML='<div class="empty">当前是通用识别核对稿，尚未完成程序迁移，不能粘贴回 Sysmac。请先处理「待判断」与「图纸疑点」。</div>';return}
   $('#view').innerHTML=`<div class="paste"><h3>粘贴回 Sysmac（建议先在工程副本上做）</h3><ol>
   <li><b>I/O 映射</b>：打开「IO映射」页签，按模块点「复制」，粘到 Sysmac I/O 映射对应插槽的 bit0 起。<br><button onclick="setTab('iomap')">打开 IO映射</button></li>
   <li><b>全局变量</b>：点下面按钮复制新增变量，到 Sysmac 全局变量表粘贴。<br><button class="primary" onclick="copyNewvars()">复制新增变量（${(ST.counts||{})['新增变量']||0} 个）</button></li>

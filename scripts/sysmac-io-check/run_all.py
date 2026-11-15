@@ -27,13 +27,25 @@ def run(script, *args):
 
 
 def main():
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4,5) or (len(sys.argv)==5 and sys.argv[4]!='--reuse'):
         sys.exit(__doc__)
     pdf, prog, out = sys.argv[1:4]
+    reuse = '--reuse' in sys.argv
+    from io_address import parse_program, load_rules
+    from pathlib import Path
+    rules=Path(prog).parent/'命名规则.json'
+    load_rules(rules if rules.exists() else None)
+    rows, _ = parse_program(prog)
+    from adaptive_drawing import needs_adaptive
+    if any(p['address']['scheme']!='legacy' for p in rows) or needs_adaptive(pdf):
+        from adaptive_workflow import run as adaptive_run
+        adaptive_run(pdf,prog,out,reuse)
+        return
     os.makedirs(out, exist_ok=True)
     csv_path = os.path.join(out, '图纸点表.csv')
     report = os.path.join(out, '对点报告.xlsx')
-    run('extract_drawing_io.py', pdf, csv_path)
+    if not reuse or not os.path.exists(csv_path):
+        run('extract_drawing_io.py', pdf, csv_path)
     run('compare_io.py', csv_path, prog, report)
     run('generate_program.py', csv_path, prog, os.path.join(out, '新程序段'),
         os.path.join(out, '对点反馈.json'))

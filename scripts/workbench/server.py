@@ -47,6 +47,7 @@ API_DOC = {
     'GET  /api/p/<项目>/job': '后台任务进度和日志',
     'GET  /api/p/<项目>/table/<results|doubts|iomap|extra|questions|audit|changes|newvars>': '表格数据',
     'POST /api/p/<项目>/feedback {"wire","function","var","judge","remark"}': '保存一条判断（wire 为图纸原线号如 I-A01-00）',
+    'POST /api/p/<项目>/feedback_batch {"items":[...]}': '批量保存判断（全部校验后一次写入，不直接生成程序）',
     'GET  /api/p/<项目>/sections': '新程序段列表',
     'GET  /api/p/<项目>/section/<段名>': '某段新旧程序全文',
     'POST /api/p/<项目>/write_clipboard': '把新程序段放入 Sysmac 剪贴板（之后在 Sysmac 右键 POUs 粘贴多个项目）',
@@ -84,6 +85,31 @@ def env():
     return {**os.environ, 'PYTHONIOENCODING': 'utf-8'}
 
 
+def save_feedback(path,items):
+    """Validate a whole batch before mutating the shared feedback file."""
+    if not isinstance(items,list) or not 1<=len(items)<=2000:
+        raise ValueError('批量处理需要 1～2000 条判断')
+    prepared=[]
+    for b in items:
+        if not isinstance(b,dict):raise ValueError('判断格式不正确')
+        for field in ('wire','function','var','judge','remark'):
+            if not isinstance(b.get(field,''),str):raise ValueError('判断字段必须是文字')
+        key='|'.join(b.get(k,'') for k in ('wire','function','var'))
+        if not b.get('wire'):raise ValueError('判断缺少线号或任务编号')
+        prepared.append((key,{'judge':b.get('judge','').strip(),'remark':b.get('remark','').strip()}))
+    with LOCK:
+        fb={}
+        if os.path.exists(path):
+            with open(path,encoding='utf-8') as f:fb=json.load(f)
+        for key,item in prepared:
+            if item['judge'] or item['remark']:fb[key]=item
+            else:fb.pop(key,None)
+        os.makedirs(os.path.dirname(path),exist_ok=True)
+        with open(path+'.tmp','w',encoding='utf-8') as f:json.dump(fb,f,ensure_ascii=False,indent=1)
+        os.replace(path+'.tmp',path)
+    return {'ok':True,'count':len(fb),'saved':len(prepared)}
+
+
 def run_py(script, *args, timeout=1800):
     r = subprocess.run([sys.executable, '-W', 'ignore', script, *args], capture_output=True,
                        env=env(), timeout=timeout)
@@ -100,18 +126,23 @@ def start_job(name, steps):
 
     def work():
         rc = 0
-        for title, script, args in steps:
-            job['step'] = title
-            job['log'] += f'\n>>> {title}\n'
-            p = subprocess.Popen([sys.executable, '-W', 'ignore', script, *args], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, env=env())
-            for line in p.stdout:
-                job['log'] += line.decode('utf-8', 'replace')
-            rc = p.wait()
-            if rc:
-                job['log'] += f'\n【失败】{title} 返回 {rc}。如提示 PermissionError，先关闭 Excel 里打开的同名文件。\n'
-                break
-        job.update(running=False, rc=rc, step='完成' if rc == 0 else '失败')
+        try:
+            for title, script, args in steps:
+                job['step'] = title
+                job['log'] += f'\n>>> {title}\n'
+                with subprocess.Popen([sys.executable, '-W', 'ignore', script, *args], stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT, env=env()) as p:
+                    for line in p.stdout:
+                        job['log'] += line.decode('utf-8', 'replace')
+                    rc = p.wait()
+                if rc:
+                    job['log'] += f'\n【失败】{title} 返回 {rc}，请看上方具体原因。\n'
+                    break
+        except Exception as e:
+            rc = 1
+            job['log'] += f'\n【失败】{e}\n'
+        finally:
+            job.update(running=False, rc=rc, step='完成' if rc == 0 else '失败')
     threading.Thread(target=work, daemon=True).start()
     return job
 
@@ -128,17 +159,19 @@ TABLES = {
 def read_sheet(path, sheet):
     from openpyxl import load_workbook
     wb = load_workbook(path, read_only=True, data_only=True)
-    if sheet not in wb.sheetnames:
-        return {'columns': [], 'rows': []}
-    it = wb[sheet].iter_rows(values_only=True)
-    cols = [c if c is not None else '' for c in next(it, [])]
-    rows = []
-    for r in it:
-        if not any(v not in (None, '') for v in r):
-            continue
-        rows.append(['' if v is None else v for v in r])
-    wb.close()
-    return {'columns': cols, 'rows': rows, 'file': os.path.basename(path)}
+    try:
+        if sheet not in wb.sheetnames:
+            return {'columns': [], 'rows': []}
+        it = wb[sheet].iter_rows(values_only=True)
+        cols = [c if c is not None else '' for c in next(it, [])]
+        rows = []
+        for r in it:
+            if not any(v not in (None, '') for v in r):
+                continue
+            rows.append(['' if v is None else v for v in r])
+        return {'columns': cols, 'rows': rows, 'file': os.path.basename(path)}
+    finally:
+        wb.close()
 
 
 def table(name, kind):
@@ -146,7 +179,18 @@ def table(name, kind):
     where, spec = TABLES[kind]
     if where == 'report':
         f = latest(os.path.join(p['out'], '对点报告*.xlsx'))
-        return read_sheet(f, spec) if f else {'columns': [], 'rows': []}
+        result = read_sheet(f, spec) if f else {'columns': [], 'rows': []}
+        if kind=='results' and result['rows'] and os.path.exists(p['fb']):
+            with open(p['fb'],encoding='utf-8') as fb_file:
+                feedback=json.load(fb_file)
+            cols=result['columns']
+            for row in result['rows']:
+                key='|'.join(str(row[cols.index(c)] or '') for c in ('图纸原线号','图纸功能','程序变量'))
+                if key in feedback:
+                    item=feedback[key]
+                    row[cols.index('你的判断')]=item.get('judge','')
+                    row[cols.index('备注')]=item.get('remark','')
+        return result
     fn, sheet = spec.split(':')
     f = latest(os.path.join(p['prog'], fn.replace('.xlsx', '*.xlsx')))
     return read_sheet(f, sheet) if f else {'columns': [], 'rows': []}
@@ -189,6 +233,10 @@ def status(name, light=False):
     summ = os.path.join(p['old'], 'summary.txt')
     st['old_sections'] = len(open(summ, encoding='utf-8').read().splitlines()) if os.path.exists(summ) else 0
     st['has_output'] = os.path.exists(p['prog'])
+    migration = os.path.join(p['prog'], '迁移状态.json')
+    if os.path.exists(migration):
+        with open(migration,encoding='utf-8') as f:
+            st['migration'] = json.load(f)
     if light:                       # 项目列表只要轻量信息，不读报告
         st.pop('job')
         return st
@@ -214,7 +262,9 @@ def status(name, light=False):
         counts['错误'] = str(e)
     st['counts'] = counts
     fb = p['fb']
-    st['feedback'] = len(json.load(open(fb, encoding='utf-8'))) if os.path.exists(fb) else 0
+    st['feedback'] = 0
+    if os.path.exists(fb):
+        with open(fb,encoding='utf-8') as feedback_file:st['feedback']=len(json.load(feedback_file))
     return st
 
 
@@ -313,28 +363,18 @@ class H(BaseHTTPRequestHandler):
             pdf = pdf_of(name)
             if not os.path.exists(os.path.join(p['old'], 'clipboard_raw.bin')):
                 return self.send(400, {'error': '还没读取旧程序（第 1 步）'})
-            if full and not pdf:
+            if not pdf:
                 return self.send(400, {'error': '还没有图纸 PDF（第 2 步）'})
             os.makedirs(p['out'], exist_ok=True)
-            steps = []
-            if full:
-                steps.append(('提取图纸点表', os.path.join(IO, 'extract_drawing_io.py'), [pdf, p['csv']]))
-            steps += [('对点', os.path.join(IO, 'compare_io.py'), [p['csv'], p['old'], os.path.join(p['out'], '对点报告.xlsx')]),
-                      ('生成新程序段', os.path.join(IO, 'generate_program.py'), [p['csv'], p['old'], p['prog'], p['fb']]),
-                      ('清算', os.path.join(IO, 'audit_program.py'), [p['csv'], p['prog']])]
+            args=[pdf,p['old'],p['out']] + ([] if full else ['--reuse'])
+            steps=[('自动识别格式、对点与生成',os.path.join(IO,'run_all.py'),args)]
             start_job(name, steps)
             return self.send(200, {'ok': True, 'started': [s[0] for s in steps]})
         if act == 'feedback':
             b = self.jbody()
-            key = f"{b.get('wire') or ''}|{b.get('function') or ''}|{b.get('var') or ''}"
-            fb = json.load(open(p['fb'], encoding='utf-8')) if os.path.exists(p['fb']) else {}
-            if (b.get('judge') or '').strip() or (b.get('remark') or '').strip():
-                fb[key] = {'judge': (b.get('judge') or '').strip(), 'remark': (b.get('remark') or '').strip()}
-            else:
-                fb.pop(key, None)
-            os.makedirs(p['out'], exist_ok=True)
-            json.dump(fb, open(p['fb'], 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-            return self.send(200, {'ok': True, 'count': len(fb)})
+            return self.send(200,save_feedback(p['fb'],[b]))
+        if act == 'feedback_batch':
+            return self.send(200,save_feedback(p['fb'],self.jbody().get('items')))
         if act == 'write_clipboard':
             rc, out = run_py(os.path.join(RD, 'write_sysmac_clipboard.py'), os.path.join(p['old'], 'clipboard_raw.bin'),
                              p['prog'], '--types', os.path.join(p['prog'], '新增变量.txt'))
