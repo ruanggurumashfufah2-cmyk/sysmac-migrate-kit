@@ -20,16 +20,49 @@ from cross_match import resolve_cycles
 ALIASES = [('OvenA','A面烘箱'),('OvenB','B面烘箱'),('NoseA','机头A'),('NoseB','机头B'),
            ('BottomDrv','出料A'),('UpperDrv','出料B'),('Uw','放卷'),('Rw','收卷'),
            ('A面涂布','机头A'),('B面涂布','机头B'),('A面牵引','出料A'),('B面牵引','出料B'),
-           ('OS','操作侧'),('DS','驱动侧')]
+           ('OS','操作侧'),('DS','驱动侧'),
+           # 图纸/程序同义说法（编号和方向不能归一，其余同义）
+           ('ALM','报警'),('alarm','报警'),('热继','热继电器'),('热继电器器','热继电器'),
+           ('控制温控表','温控表'),('监控温控表','温控表'),('船体升降','船体提升'),
+           ('排风风机','排风机'),('维修侧','驱动侧'),('基准棍','基准辊'),
+           ('变频器','变频')]
+
+
+def _load_synonyms():
+    """复用 legacy 流程的同义词表，避免两套流程各说各话。"""
+    out = []
+    try:
+        path = Path(__file__).with_name('synonyms.json')
+        for row in json.loads(path.read_text(encoding='utf-8')):
+            if len(row) >= 2 and row[0] and row[1] and row[0] not in ('一', '二') \
+                    and row[0] != row[1] and row[0] not in ('按钮', '信号'):
+                out.append((row[0], row[1]))
+    except Exception:
+        pass
+    return out
+
+
+ALIASES += _load_synonyms()
 
 
 def semantic(text):
+    """图纸功能与程序变量的语义归一：机构/同义词 + 编号写法统一。
+
+    图纸把编号写在文字里（一层02#、温控表1ALM），程序常放在数组下标里
+    （[2]、[10,4]）。两者必须归一到相同形式，否则相似度被编号差异拉低，
+    大量本该配上的点被误判「相似度不足」。方向（操作侧/驱动侧）、编号本身
+    仍参与比较，不能抹掉。
+    """
     s = re.sub(r'^(DI|DQ|DO|AI|AQ|ID|OD|AD|DA)_','',text)
     for a,b in ALIASES:
         s = s.replace(a,b)
-    # Array indices remain significant. Never erase device number / side / direction.
-    s = re.sub(r'\[(\d+)\]',r'第\1节',s)
+    # 楼层中文 → 数字层；#写法与数组下标都归一成 #编号
+    s = s.replace('一层','1层').replace('二层','2层').replace('三层','3层')
+    s = re.sub(r'\[(\d+)(?:[,\s]+(\d+))?\]',
+               lambda m: '#' + m.group(1) + (('#' + m.group(2)) if m.group(2) else ''), s)
     s = re.sub(r'(?<!\d)0+(\d+)',r'\1',s)
+    s = re.sub(r'(\d+)-',r'\1#',s)
+    s = re.sub(r'(\d+)#',r'#\1',s)
     return re.sub(r'[\s_\-#（）()：:]', '', s)
 
 
@@ -168,7 +201,8 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
         elif len(candidates) > 1:
             reasons.append('旧程序同一地址有多处赋值')
         elif d.get('void'):
-            reasons.append('图纸整页作废，需确认受影响范围')
+            reasons.append(('图纸整页作废' if d['void'] == '整页作废' else '图纸此点打叉作废')
+                           + ('，程序仍在使用，确认是否注释' if p else '，程序未用'))
         elif not p:
             if re.fullmatch(r'(?:备用|预留|未用|NC)',d['function'],re.I):
                 action = 'unused'
