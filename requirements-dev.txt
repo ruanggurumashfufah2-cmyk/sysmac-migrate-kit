@@ -1,0 +1,4 @@
+# 开发/测试依赖。正常运行工具只需要 requirements.txt。
+# 用法：pip install -r requirements-dev.txt
+-r requirements.txt
+pytest>=8

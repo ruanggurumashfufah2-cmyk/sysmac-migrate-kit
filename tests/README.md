@@ -1,11 +1,28 @@
 # 回归测试
 
-一句话：**改任何规则/代码后，先跑 `python tests/regress.py --check`，全绿再交付。**
+一句话：**改任何规则/代码后，把下面三套测试都跑一遍，全绿再交付。**
 
 改生成规则的风险不在"报错"，而在"静默改错"——程序段照样生成、照样能粘贴、编译也过，
-但线号接错一个，到现场就是停线。所以这里比对的是**全部输出的内容快照**，不是代码覆盖率。
+但线号接错一个，到现场就是停线。快照回归比对的是**全部输出的内容**，不是代码覆盖率。
 
-## 命令
+## 三套测试都要跑（同步 2026-11-15 通用识别后）
+
+| 命令 | 覆盖 | 前置依赖 |
+|---|---|---|
+| `python -m pytest tests/ -q` | 通用识别、地址解析、成组交叉匹配、批量判断、剪贴板 XML、工作台接口（50 项） | `pip install -r requirements-dev.txt` |
+| `node tests/test_workbench_review.js` | 前端批量选择/保存/重名拦截/300 行保存/部分失败（1 项） | Node.js，无 npm 依赖 |
+| `python tests/regress.py --check` | 旧格式（legacy）全流程输出快照 | 只要 `requirements.txt` |
+
+注意：
+
+- `pytest` 不会收集 `regress.py`（文件名不以 `test_` 开头），更不会跑 `.js`，所以三条必须分别执行。
+- **`regress.py` 直接调 `compare_io → generate_program → audit_program`，绕过了 `run_all.py` 的通用识别分流**，
+  它只保护旧格式项目。通用识别流程目前只有 pytest 单元测试，没有端到端输出快照。
+  等有真实通用格式项目后，应把用例改走 `run_all.py`（见下方「加真实用例」）。
+- 实测基线：Python 3.13.14 / pymupdf 2.1 / openpyxl 3.1.5 / pytest 9.2.0 / Node 22.22.2，
+  `pytest 50 passed`、JS `PASS`、快照 `--check` 全绿。
+
+## 快照回归命令
 
 ```
 python tests/regress.py --list            列出用例和期望结果状态
@@ -60,5 +77,5 @@ tests/cases/<项目代号>/
 ## 已知局限
 
 - 样式（单元格颜色、下拉框、列宽）不比对
-- 工作台 `server.py` 的网页部分没有回归覆盖，改前端只能人工看
+- 工作台的后端接口与前端交互由 `test_workbench_*.py` / `test_workbench_review.js` 覆盖，但界面布局、配色仍需人工看
 - `smoke` 是合成数据，它的"正确结果"没有现场含义，别拿它当业务正确性依据
