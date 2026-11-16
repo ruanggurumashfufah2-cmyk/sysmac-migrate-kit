@@ -403,7 +403,7 @@ function batchItems(tasks,action,settings){
   return tasks.map(t=>{
     const values={...(settings.valuesFor?.(t)||{})};
     if(action==='new'){values.var=batchNewName(t,settings.template||'{类型}_{从站}_{功能}',settings.workstation||'');values.section=settings.section||''}
-    if(action==='source'){const sources=(t.sources||[]).filter(s=>s.simple&&s.kind===t.signal_kind);if(sources.length!==1)throw new Error('存在不唯一的候选，需逐项处理');values.source={section:sources[0].section,line:sources[0].line}}
+    if(action==='source'){const sources=(t.sources||[]).filter(s=>s.simple&&s.kind===t.signal_kind&&!s.cross_station);if(sources.length!==1)throw new Error(sources.length?'存在不唯一的候选（跨机构需逐项核对），需逐项处理':'没有同机构可用候选，需逐项处理');values.source={section:sources[0].section,line:sources[0].line}}
     return {task:t,draft:{action,values,remark:settings.remarkFor?.(t)||''}};
   });
 }
@@ -545,11 +545,12 @@ async function qPopulateSources(i){
   try{const catalogue=await qCatalog();if(P!==project||TAB!=='questions'||Q_TASKS[i]?.id!==t.id)return;
     const el=$('#qsource-'+i);if(!el)return;const d=qDraft(t),q=d.query.toLowerCase();
     const preferred=new Set((t.sources||[]).map(s=>s.section+':'+s.line));
+    const crossSet=new Set((t.sources||[]).filter(s=>s.cross_station).map(s=>s.section+':'+s.line));
     let matches=catalogue.map((s,n)=>({s,n})).filter(({s})=>s.kind===t.signal_kind&&(!q||[s.var,s.section,s.wire].join(' ').toLowerCase().includes(q)));
     matches.sort((a,b)=>Number(preferred.has(b.s.section+':'+b.s.line))-Number(preferred.has(a.s.section+':'+a.s.line)));
     const chosen=catalogue.findIndex(s=>s.section===d.values.source?.section&&s.line===d.values.source?.line);
     let shown=matches.slice(0,40);if(chosen>=0&&!shown.some(x=>x.n===chosen))shown.unshift({s:catalogue[chosen],n:chosen});
-    el.innerHTML='<option value="">请选择旧映射…</option>'+shown.map(({s,n})=>`<option value="${n}" ${chosen===n?'selected':''}>${esc(s.wire+' · '+s.var+' · '+s.section+' 第'+s.line+'行')}</option>`).join('');
+    el.innerHTML='<option value="">请选择旧映射…</option>'+shown.map(({s,n})=>`<option value="${n}" ${chosen===n?'selected':''}>${esc(s.wire+' · '+s.var+' · '+s.section+' 第'+s.line+'行'+(crossSet.has(s.section+':'+s.line)?'（跨机构，请核对）':''))}</option>`).join('');
     const preview=$('#qpreview-'+i);if(preview)preview.textContent=chosen>=0?catalogue[chosen].raw:matches.length?`找到 ${matches.length} 条可用映射，显示前 40 条；可输入旧变量名缩小范围。`:'没有同类型的可用映射，请更换关键词，或选择新建变量。';
   }catch(e){toast('读取旧映射失败：'+e.message)}
 }

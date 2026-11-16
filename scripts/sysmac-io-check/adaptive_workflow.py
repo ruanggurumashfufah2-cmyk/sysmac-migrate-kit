@@ -311,17 +311,30 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
         pool[(a['scheme'],a['kind'],a['station'])].append(p)
     proposals=defaultdict(list)
     for r in results:
-        if r['var'] or not r['address'] or r['status']!='❓ 待判断':
+        if not r['address'] or r['status']!='❓ 待判断' or r.get('void'):
             continue
-        ranked = []
         a=r['address']
-        for p in pool[(a['scheme'],a['kind'],a['station'])]:
+        same = pool[(a['scheme'],a['kind'],a['station'])]
+        seen = {id(p) for p in same}
+        # 同机构优先；其余机构同类型只作候选展示，不自动采用（跨机构不自动改）。
+        # 同地址多处赋值的旧行本身有歧义，不能当候选，否则会掩盖重复赋值问题。
+        others = [p for p in program if id(p) not in seen and p['address']['kind']==a['kind']
+                  and len(by_old.get(p['address']['key'],[]))==1]
+        ranked = []
+        for p in same + others:
             sc = similarity(r['function'],p)
             if sc>=.5 and not functional_conflicts(r['function'],p):
                 ranked.append((sc,p))
         ranked.sort(key=lambda x:-x[0])
-        r['suggestions'] = [{'var':p['var'],'wire':p['address']['raw'],'score':round(sc,3)} for sc,p in ranked[:3]]
+        r['suggestions'] = [{'var':p['var'],'wire':p['address']['raw'],
+                             'score':round(sc,3),'cross':p not in same}
+                            for sc,p in ranked[:3]]
+        ranked = [(sc,p) for sc,p in ranked if p in same]
         meaning=(a['scheme'],a['kind'],a['station'],semantic(r['function']))
+        # 自动挪动只针对原本没有旧变量的点。已有同地址旧变量的点即使存在更相似
+        # 候选，也只把候选列给用户判断，绝不自动挪走既有映射（避免掩盖重复赋值）。
+        if r['var']:
+            continue
         if r.get('review') or not r['recognized'] or r.get('void') or len(by_key[a['key']])!=1 or drawing_meanings[meaning]!=1 or r['judge'] in ('待判断','错','不对'):
             continue
         eligible=[(sc,p) for sc,p in ranked if p['simple'] and p['refs']==1
