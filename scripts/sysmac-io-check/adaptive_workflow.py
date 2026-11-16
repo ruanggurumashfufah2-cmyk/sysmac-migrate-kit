@@ -28,6 +28,19 @@ ALIASES = [('OvenA','A面烘箱'),('OvenB','B面烘箱'),('NoseA','机头A'),('N
            ('变频器','变频')]
 
 
+def _numbers(text):
+    """取点位编号集合：图纸「一层02-3#」→{2,3}，程序「[2,3]」→{2,3}。
+
+    编号是工位/节号的硬约束，自动挪动时必须一致，防止「1号点」被挪到「2号点」。
+    """
+    idx = re.findall(r'\[([\d,\s]+)\]', text)
+    if idx:
+        return frozenset(int(x) for x in re.findall(r'\d+', idx[0]))
+    body = re.sub(r'[123]层', '', text)
+    nums = {int(x) for x in re.findall(r'(?<!\d)0*(\d+)', body) if 1 <= int(x) <= 99}
+    return frozenset(nums)
+
+
 def _load_synonyms():
     """复用 legacy 流程的同义词表，避免两套流程各说各话。"""
     out = []
@@ -369,16 +382,23 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
             if sc>=.5 and not functional_conflicts(r['function'],p):
                 ranked.append((sc,p))
         ranked.sort(key=lambda x:-x[0])
+        # 强推荐：同机构、编号硬约束一致、核心功能高分、无方向冲突。
+        # 这类候选只交给用户确认，不自动采用，但前端优先展示并可批量一键采用。
+        strong_ids={id(p) for sc,p in ranked
+                    if p in same and sc>=.7 and not functional_conflicts(r['function'],p)
+                    and _numbers(r['function'])==_numbers(p['var'])}
         r['suggestions'] = [{'var':p['var'],'wire':p['address']['raw'],
-                             'score':round(sc,3),'cross':p not in same}
+                             'score':round(sc,3),'cross':p not in same,
+                             'strong':id(p) in strong_ids}
                             for sc,p in ranked[:3]]
         ranked = [(sc,p) for sc,p in ranked if p in same]
         meaning=(a['scheme'],a['kind'],a['station'],semantic(r['function']))
-        # 自动挪动只针对原本没有旧变量的点。已有同地址旧变量的点即使存在更相似
-        # 候选，也只把候选列给用户判断，绝不自动挪走既有映射（避免掩盖重复赋值）。
-        if r['var']:
-            continue
         if r.get('review') or not r['recognized'] or r.get('void') or len(by_key[a['key']])!=1 or drawing_meanings[meaning]!=1 or r['judge'] in ('待判断','错','不对'):
+            continue
+        # 自动挪动只针对原本没有旧变量的点。已有同地址旧变量的点即使存在
+        # 更相似候选，也只把候选列给用户判断（含强推荐），绝不自动挪走既有映射：
+        # 用户明确要求「锁定/暂缓/并列/重复赋值」的点不能被自动覆盖。
+        if r['var']:
             continue
         eligible=[(sc,p) for sc,p in ranked if p['simple'] and p['refs']==1
                   and len(by_old[p['address']['key']])==1

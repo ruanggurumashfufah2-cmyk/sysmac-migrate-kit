@@ -45,11 +45,11 @@ def saved_action(feedback,identifier):
     return {'action':value['action'],'values':values if not error else {},'remark':item.get('remark',''),'error':error}
 
 
-def compact_source(p, cross=False):
+def compact_source(p, cross=False, strong=False):
     return {'section':p['section'],'line':p['line'],'var':p['var'],
             'wire':p['address']['raw'],'kind':p['address']['kind'],
             'simple':bool(p['simple'] and p['refs']==1),'raw':p['raw'],
-            'cross_station':bool(cross)}
+            'cross_station':bool(cross),'strong':bool(strong)}
 
 
 def problem_group(row):
@@ -78,12 +78,15 @@ def point_task(row,program,rev,generation,feedback,sections):
     options+=['ignore','defer']
     seen={(p['section'],p['line']) for p in sources}
     cross_sources=set()
+    strong_sources=set()
     for suggestion in row.get('suggestions',[]):
         for p in program:
             if p['var']==suggestion['var'] and p['address']['raw']==suggestion['wire'] and (p['section'],p['line']) not in seen:
                 sources.append(p);seen.add((p['section'],p['line']))
                 if suggestion.get('cross'):
                     cross_sources.add((p['section'],p['line']))
+                if suggestion.get('strong'):
+                    strong_sources.add((p['section'],p['line']))
                 break
     return {'id':ident,'kind':'point','identity':point_identity(row),'generation':generation,
             'wire':row['original_wire'],'target_wire':row['wire'],'page':row['page'],
@@ -92,7 +95,8 @@ def point_task(row,program,rev,generation,feedback,sections):
             'raw':row['raw'] or '\n'.join(p['raw'] for p in sources),'section':row['section'],
             'view_section':row['section'] or (sources[0]['section'] if sources else ''),'line':row['line'],
             'options':[{'value':o,'label':LABELS[o]} for o in options],
-            'sources':[compact_source(p, (p['section'],p['line']) in cross_sources) for p in sources], 'sections':sections,
+            'sources':[compact_source(p, (p['section'],p['line']) in cross_sources,
+                                      (p['section'],p['line']) in strong_sources) for p in sources], 'sections':sections,
             'signal_kind':a['kind'] if a else '',
             'station':a['station'] if a else '', 'module':a['module'] if a else '',
             'channel':a['channel'] if a else '', 'address_scheme':a['scheme'] if a else '',

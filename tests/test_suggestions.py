@@ -46,6 +46,14 @@ class SuggestionTests(unittest.TestCase):
         variables = [s['var'] for s in task['sources']]
         self.assertIn('ID_机头A_驱动侧急停', variables)
 
+    def test_strong_marked_for_same_station_high_score(self):
+        """同机构、高分、编号一致、无方向冲突的候选标 strong，供网页优先展示"""
+        results = compare({'points': self.points}, self.program, {})[0]
+        sug = [s for s in results[0].get('suggestions', [])
+               if s['var'] == 'ID_机头A_驱动侧急停']
+        self.assertTrue(sug)
+        self.assertTrue(sug[0].get('strong'))
+
     def test_existing_mapping_not_auto_moved(self):
         """即使有更相似候选，也不自动挪走同地址既有变量——只交给用户判断"""
         results, _, decisions, _ = compare({'points': self.points}, self.program, {})
