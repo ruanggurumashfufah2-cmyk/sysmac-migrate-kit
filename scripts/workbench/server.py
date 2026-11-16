@@ -340,7 +340,13 @@ class H(BaseHTTPRequestHandler):
         if method != 'POST':
             return self.send(405, {'error': '需要 POST'})
         if act == 'read_clipboard':
+            # 记录读取前的旧段，读完后对比，明确告诉用户哪些段已不在剪贴板（已被清理）。
+            before = {os.path.basename(f) for f in glob.glob(os.path.join(p['old'], '*.st.txt'))}
             rc, out = run_py(os.path.join(RD, 'read_sysmac_clipboard.py'), p['old'])
+            after = {os.path.basename(f) for f in glob.glob(os.path.join(p['old'], '*.st.txt'))}
+            gone = sorted(before - after)
+            if gone:
+                out += '\n\n已从本次读取中移除（剪贴板里已不存在）的旧程序段：\n' + '\n'.join(gone)
             return self.send(200 if rc == 0 else 400, {'ok': rc == 0, 'log': out})
         if act == 'drawing':
             fn = os.path.basename(q.get('filename') or 'drawing.pdf')

@@ -97,6 +97,15 @@ def main():
     outdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         'sysmac_export', datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
     os.makedirs(outdir, exist_ok=True)
+    # 先清掉上次导出的程序段，否则用户这次在 Sysmac 删掉的段仍会留在目录里，
+    # 后续对点把它当成有效旧程序读进去（「明明删了却还在」）。
+    # 只删本脚本自己生成的文件，不动用户放的其他文件。
+    for fn in os.listdir(outdir):
+        if fn.endswith('.st.txt') or fn in ('variables.txt', 'summary.txt', 'clipboard_raw.bin'):
+            try:
+                os.remove(os.path.join(outdir, fn))
+            except OSError:
+                pass
     open(os.path.join(outdir, 'clipboard_raw.bin'), 'wb').write(data)
 
     sections, variables = extract(data)
