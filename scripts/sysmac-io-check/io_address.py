@@ -72,6 +72,11 @@ class Address:
             return self.template.format(station=self.station,module=int(self.module) if self.module.isdigit() else self.module,
                                         channel=self.channel,kind=self.kind,
                                         direction={'DI':'I','DO':'Q','AI':'AI','AO':'AQ'}[self.kind])
+        if self.scheme == 'org':
+            if self.kind in ('DI', 'DO'):
+                return f'{self.station}_{"I" if self.kind == "DI" else "Q"}{self.module}_{self.channel:02d}'
+            return f'{self.station}_AI{self.module}_{self.channel}' if self.input \
+                else f'{self.station}_AQ{self.module}_{self.channel}'
         if self.scheme == 'station':
             if self.kind in ('DI', 'DO'):
                 return f'{self.station}_{"I" if self.input else "Q"}{self.module}_{self.channel:02d}'
@@ -81,12 +86,49 @@ class Address:
         return f'{prefix}_{self.module}_{ch}'
 
 
+# 机构代号编址（涂布机图纸/程序）：单字母机构代号 + I/Q/AI/AQ + 模块号 + 通道。
+# 分隔符 _ 或 - 皆可（图纸用 B-I01-00，旧程序用 B_I1_00）。
+# 机构代号只有单字母，与老式信号字母 A/I/O/D 重叠，因此判别依据放在第二段：
+# 第二段形如 I01 / Q02 / 1AI / AI1 / FI2 等「模块标记」才算机构代号式，
+# 否则交给老式 _LEGACY（A03 => 老式模拟量模块，I-A03-08 => 老式输入）。
+_ORG_CODES = frozenset('A B C D E F G H I J K L M N R S T U V W X Y'.split())
+_ORG_MOD = (r'(?:(?P<org_f>F?)(?P<org_d>[IQ])(?P<org_dm>\d{1,3})'
+            r'|(?P<org_am1>\d{1,2})(?P<org_a1>F?AI|F?AQ)'
+            r'|(?P<org_a2>F?AI|F?AQ)(?P<org_am2>\d{1,2}))')
+# 模拟量的通道段可带 I+/V+/+/- 端子（规则示例 A_2AI_4I+、图纸 S-1AI-1+），
+# 旧程序则省略端子（A_AI1_1）。端子不参与地址身份，但不能让它妨碍匹配。
+_ORG_STATION = re.compile(
+    r'(?P<org_station>[A-Z])[-_](?:' + _ORG_MOD + r')[-_]'
+    r'(?P<org_ch>\d{1,2})(?P<org_term>I\+|V\+|[+-])?(?!\w)')
+# 机构代号 → 程序/说明里的工位名（仅用于显示与语义比对，不参与地址身份）
+ORG_STATION_NAME = {
+    'A': '机头A', 'B': '机头B', 'C': '放卷', 'D': '收卷1', 'E': '出料A', 'F': '出料B',
+    'G': '双辊牵引', 'H': '机尾从站', 'I': '机头从站', 'J': '总新风', 'K': '收卷2',
+    'L': '总排风', 'M': '烘箱一单元', 'N': '烘箱二单元', 'R': '烘箱三单元',
+    'S': '机头涂布牵引', 'T': '机尾涂布牵引', 'U': '循环排风1', 'V': '循环排风2',
+    'W': '红外风机', 'X': 'A面红外', 'Y': 'B面红外',
+}
+
 _STATION = re.compile(r'(?P<station>[A-Z]+\d+)_(?:(?P<digital>[IQO])(?P<dm>\d+)_(?P<dc>\d{1,2})|(?P<am>\d+)(?P<analog>AI|AQ|AO)(?P<ac>\d+)(?P<terminal>I\+|V\+|\+|-)?)(?!\w)')
 _LEGACY = re.compile(r'(?:(?P<prefix>ID|OD|AD|DA)_(?P<module>[A-Z](?:\d[0-9A-Z]|\d{3}))(?:_(?P<ch>\d{1,2})|\[(?P<array>\d+)\])|(?P<draw>AD|DA|[IOAD])[-_](?P<dmodule>[A-Z](?:\d[0-9A-Z]|\d{3}))-(?P<dch>\d{1,2})(?P<terminal>[+-])?)(?!\w)')
 
 
 def parse_address(token):
     """No case-folding or station renaming: PLC identifiers must remain exact."""
+    m = _ORG_STATION.fullmatch(token)
+    if m and m['org_station'] in _ORG_CODES:
+        # 数字量 I/Q；AI/AQ 为模拟量；F 前缀为安全型（FI/FQ/FAI/FAQ）。
+        if m['org_dm'] is not None:
+            kind = 'DI' if m['org_d'] == 'I' else 'DO'
+            module, channel = str(int(m['org_dm'])), int(m['org_ch'])
+        elif m['org_a1'] is not None:
+            kind = 'AI' if 'AI' in m['org_a1'] else 'AO'
+            module, channel = str(int(m['org_am1'])), int(m['org_ch'])
+        else:
+            kind = 'AI' if 'AI' in m['org_a2'] else 'AO'
+            module, channel = str(int(m['org_am2'])), int(m['org_ch'])
+        return Address('org', kind, m['org_station'], module, channel, token,
+                       m['org_term'] or '')
     m = _STATION.fullmatch(token)
     if m:
         if m['digital']:
@@ -124,7 +166,7 @@ def parse_address(token):
 
 def find_addresses(text):
     seen=set()
-    for pattern in (_STATION, _LEGACY, *(p for _,p in _CUSTOM)):
+    for pattern in (_ORG_STATION, _STATION, _LEGACY, *(p for _,p in _CUSTOM)):
         for m in pattern.finditer(text):
             if m.start() and (text[m.start()-1].isalnum() or text[m.start()-1] == '_'):
                 continue

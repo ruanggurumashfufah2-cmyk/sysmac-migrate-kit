@@ -22,7 +22,12 @@ IO_SLOT = re.compile(r'^(INPUT|OUTPUT)\d+$')
 
 
 def norm_wire_text(t):
-    """返回 (规范线号, 是否书写不规范)"""
+    """返回 (规范线号, 是否书写不规范)。老式与机构代号式统一由 parse_address 判定。"""
+    from io_address import parse_address as _pa
+    a = _pa(t)
+    if a and a.scheme == 'org':
+        # 机构代号式：归一成程序写法 B_I1_00 / A_AI2_4，图纸的连字符/前导零都视为书写差异
+        return a.program_token(), ('-' in t or re.search(r'0\d', t.split('-')[-1]) is not None)
     m = WIRE.match(t)
     if not m:
         return '', False
@@ -36,7 +41,9 @@ def center(w):
 def page_points(page, pno, words=None):
     words = words or page.get_text('words')
     slots = [w for w in words if SLOT.match(w[4])]
-    wires = [w for w in words if WIRE.match(w[4])]
+    from io_address import parse_address as _pa
+    wires = [w for w in words if WIRE.match(w[4]) or
+             (lambda a: a and a.scheme == 'org')(_pa(w[4]))]
     if len(slots) < 4 or not wires:
         return []
     hdr = {w[4]: w for w in words if w[4] in ('功能', '类别', '端子', '型号')}

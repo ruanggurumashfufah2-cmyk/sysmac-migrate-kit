@@ -100,7 +100,15 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
     for d in drawing:
         if d['address'] and not d.get('excluded'):
             by_key[d['address']['key']].append(d)
+    def hmi_mirror(row):
+        # 触摸屏监控用的数组镜像：A_I1[0] := A_I1_00，左侧是纯 [X_n[i]] 变量，
+        # 不是业务变量（业务变量形如 ID_机头A_系统急停按钮）。这类赋值只是把
+        # 同一物理点映射给 HMI 数组，不计入「同一地址多处赋值」，源码仍保留。
+        var = row.get('var', '')
+        return bool(re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,20}\[\d+\]', var))
     for p in program:
+        if hmi_mirror(p):
+            continue
         by_old[p['address']['key']].append(p)
     meanings=defaultdict(list)
     drawing_meanings=Counter()
