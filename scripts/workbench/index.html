@@ -485,8 +485,8 @@ function qCompactTable(tasks,index){
   if(!tasks.length)return '';
   return `<div class="q-compact-wrap"><table class="q-compact"><thead><tr><th class="q-check">选</th><th class="q-point">图纸点位 / 功能</th><th class="q-old">当前旧变量 / 原文</th><th class="q-issue">为什么要处理 / 建议</th><th class="q-op">状态 / 操作</th></tr></thead><tbody>${tasks.map(t=>{
     const i=index.get(t.id),group=Q_GROUPS[questionGroup(t)],queued=qIsQueued(t),draft=qDraft(t);
-    return `<tr class="${Q_PICKED.has(t.id)?'selected ':''}${queued?'queued':''}" data-task-id="${esc(t.id)}"><td><input aria-label="选择 ${esc(t.wire)}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)"></td>
-      <td><span class="q-code"><b>${esc(t.wire)}</b></span> <span class="q-sub">${t.page?'P'+esc(t.page):''}</span><div>${esc(t.function)}</div><div class="mobile-issue q-sub">${esc(group.title)}</div></td>
+    return `<tr class="${Q_PICKED.has(t.id)?'selected ':''}${queued?'queued':''}" data-task-id="${esc(t.id)}"><td><input aria-label="选择 ${esc(t.wire||'（无线号）')}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)"></td>
+      <td><span class="q-code"><b>${esc(t.wire||'（无线号）')}</b></span> <span class="q-sub">${t.page?'P'+esc(t.page):''}</span><div>${esc(t.function)}</div><div class="mobile-issue q-sub">${esc(group.title)}</div></td>
       <td class="q-old"><div class="q-code">${esc(t.var||((t.sources||[]).length>1?'有 '+t.sources.length+' 条候选':'没有同地址旧映射'))}</div><div class="q-sub">${esc(t.section||questionScope(t).moduleKey)}</div></td>
       <td class="q-issue"><b>${esc(group.title)}</b><div class="q-sub">${qReasonHtml(t)}</div></td>
       <td class="q-op"><span class="q-tag ${queued?'saved':''}">${queued?'已保存待应用':t.saved?.action==='defer'?'已暂缓':t.saved?'需修正处理':'待处理'}</span><button onclick="qShowDetail(${i})">看建议 / 处理</button></td></tr>`;
@@ -494,7 +494,7 @@ function qCompactTable(tasks,index){
 }
 function qTogglePick(i,on){const t=Q_TASKS[i];on?Q_PICKED.add(t.id):Q_PICKED.delete(t.id);renderQuestions(cache.questions)}
 function qShowDetail(i){const t=Q_TASKS[i];if(!t)return;Q_OPEN=t.id;const dialog=$('#qdetail'),group=Q_GROUPS[questionGroup(t)];
-  dialog.innerHTML=`<div class="q-dialog-head"><h3>处理 ${esc(t.wire)}</h3><button onclick="Q_OPEN=null;$('#qdetail').close()">关闭</button></div><div class="q-guide-box"><b>${esc(group.title)}</b><br>${esc(group.guide)}</div>${qCard(t,i,true)}`;
+  dialog.innerHTML=`<div class="q-dialog-head"><h3>处理 ${esc(t.wire||'（无线号）')}</h3><button onclick="Q_OPEN=null;$('#qdetail').close()">关闭</button></div><div class="q-guide-box"><b>${esc(group.title)}</b><br>${esc(group.guide)}</div>${qCard(t,i,true)}`;
   if(!dialog.open)dialog.showModal();if(qDraft(t).action==='source')qPopulateSources(i);
   dialog.oncancel=()=>{Q_OPEN=null};
 }
@@ -502,13 +502,13 @@ function qBatchConfig(action){Q_BATCH_ACTION=action;$('#qbatch-config').hidden=a
 function qCard(t,i,inDialog=false){
   const d=qDraft(t),queued=qIsQueued(t),saved=t.saved;
   return `<article class="q-card ${queued?'queued':''}" data-task-id="${esc(t.id)}"><div class="q-head">
-    ${inDialog?'':`<input aria-label="选择 ${esc(t.wire)}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)">`}
-    <b>${esc(t.wire)}</b><span>${esc(t.function)}</span><span class="q-tag ${queued?'saved':''}">${queued?'已保存，待应用':saved?.action==='defer'?'已暂缓':saved?'上次处理尚未消除问题':'尚未处理'}</span></div>
+    ${inDialog?'':`<input aria-label="选择 ${esc(t.wire||'（无线号）')}" type="checkbox" ${Q_PICKED.has(t.id)?'checked':''} onchange="qTogglePick(${i},this.checked)">`}
+    <b>${esc(t.wire||'（无线号）')}</b><span>${esc(t.function)}</span><span class="q-tag ${queued?'saved':''}">${queued?'已保存，待应用':saved?.action==='defer'?'已暂缓':saved?'上次处理尚未消除问题':'尚未处理'}</span></div>
     <div class="q-loc">${t.page?'PDF 第 '+esc(t.page)+' 页 · ':''}${esc(t.section||'未指定程序段')}${t.line?' · 第 '+esc(t.line)+' 行':''}</div>
     <div class="q-reason">${qReasonHtml(t)}</div>
     ${t.raw?`<details><summary>查看旧程序原文${t.kind==='module'?'（整组）':''}</summary><pre class="q-context">${esc(t.raw)}</pre></details>`:''}
-    <div class="q-form"><label>根据实际情况选择<select aria-label="处理方式 ${esc(t.wire)}" onchange="qChangeAction(${i},this.value)"><option value="">请选择实际情况…</option>${t.options.map(o=>`<option value="${o.value}" ${d.action===o.value?'selected':''}>${esc(Q_ACTIONS[o.value]||o.label)}</option>`).join('')}</select></label>
-    ${qFields(t,i,d)}<label class="wide">备注（可选）<input aria-label="备注 ${esc(t.wire)}" value="${esc(d.remark)}" oninput="qDraft(Q_TASKS[${i}]).remark=this.value"></label></div>
+    <div class="q-form"><label>根据实际情况选择<select aria-label="处理方式 ${esc(t.wire||'（无线号）')}" onchange="qChangeAction(${i},this.value)"><option value="">请选择实际情况…</option>${t.options.map(o=>`<option value="${o.value}" ${d.action===o.value?'selected':''}>${esc(Q_ACTIONS[o.value]||o.label)}</option>`).join('')}</select></label>
+    ${qFields(t,i,d)}<label class="wide">备注（可选）<input aria-label="备注 ${esc(t.wire||'（无线号）')}" value="${esc(d.remark)}" oninput="qDraft(Q_TASKS[${i}]).remark=this.value"></label></div>
     <div class="q-actions"><button class="primary" onclick="qSave(${i},false,this)">保存处理</button><button onclick="qSave(${i},true,this)">保存并重新生成</button>
     ${queued||saved?`<button onclick="qReset(${i},this)">撤回已存处理</button>`:''}
     ${(t.view_section||t.section)&&t.kind==='point'?`<button onclick="qViewProgram(${i})">查看程序段</button>`:''}
@@ -516,9 +516,9 @@ function qCard(t,i,inDialog=false){
 }
 function qFields(t,i,d){
   let html='';
-  if(d.action==='source')html=`<label>搜索旧变量或程序段<input aria-label="搜索旧映射 ${esc(t.wire)}" value="${esc(d.query)}" oninput="qDraft(Q_TASKS[${i}]).query=this.value;qPopulateSources(${i})"></label><label class="wide">选择旧映射<select id="qsource-${i}" aria-label="选择旧映射 ${esc(t.wire)}" onchange="qChooseSource(${i},this.value)"><option>加载可用映射…</option></select></label><pre id="qpreview-${i}" class="q-context" style="width:100%"></pre>`;
-  if(d.action==='new')html=`<label>新全局变量名<input aria-label="新变量名 ${esc(t.wire)}" placeholder="例如 DI_放卷_到位检测" value="${esc(d.values.var||'')}" oninput="qDraft(Q_TASKS[${i}]).values.var=this.value"></label><label>放入程序段<select aria-label="新增程序段 ${esc(t.wire)}" onchange="qDraft(Q_TASKS[${i}]).values.section=this.value"><option value="">请选择…</option>${t.sections.map(s=>`<option value="${esc(s)}" ${d.values.section===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label><span class="q-help">${['DI','DO'].includes(t.signal_kind)?'新变量为 BOOL':'新变量为 INT，直接读写原始模拟量'}</span>`;
-  if(d.action==='address')html=`<label>更正后的图纸线号<input aria-label="更正线号 ${esc(t.wire)}" placeholder="例如 D2_Q1_08" value="${esc(d.values.address||'')}" oninput="qDraft(Q_TASKS[${i}]).values.address=this.value"></label>`;
+  if(d.action==='source')html=`<label>搜索旧变量或程序段<input aria-label="搜索旧映射 ${esc(t.wire||'（无线号）')}" value="${esc(d.query)}" oninput="qDraft(Q_TASKS[${i}]).query=this.value;qPopulateSources(${i})"></label><label class="wide">选择旧映射<select id="qsource-${i}" aria-label="选择旧映射 ${esc(t.wire||'（无线号）')}" onchange="qChooseSource(${i},this.value)"><option>加载可用映射…</option></select></label><pre id="qpreview-${i}" class="q-context" style="width:100%"></pre>`;
+  if(d.action==='new')html=`<label>新全局变量名<input aria-label="新变量名 ${esc(t.wire||'（无线号）')}" placeholder="例如 DI_放卷_到位检测" value="${esc(d.values.var||'')}" oninput="qDraft(Q_TASKS[${i}]).values.var=this.value"></label><label>放入程序段<select aria-label="新增程序段 ${esc(t.wire||'（无线号）')}" onchange="qDraft(Q_TASKS[${i}]).values.section=this.value"><option value="">请选择…</option>${t.sections.map(s=>`<option value="${esc(s)}" ${d.values.section===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label><span class="q-help">${['DI','DO'].includes(t.signal_kind)?'新变量为 BOOL':'新变量为 INT，直接读写原始模拟量'}</span>`;
+  if(d.action==='address')html=`<label>更正后的图纸线号<input aria-label="更正线号 ${esc(t.wire||'（无线号）')}" placeholder="例如 D2_Q1_08" value="${esc(d.values.address||'')}" oninput="qDraft(Q_TASKS[${i}]).values.address=this.value"></label>`;
   if(d.values.address&&d.action!=='address')html+=`<span class="q-help">沿用已更正线号：${esc(d.values.address)}</span>`;
   return html;
 }
@@ -615,7 +615,7 @@ function qRenderBatch(){
     <div class="q-guide-box"><b>${esc(Q_ACTIONS[b.action])}</b><br>${qActionHelp(b.action)}<br>范围：${esc(stations.join('、')||'当前所选项')}；以下全部是已勾选项，与当前显示条数无关。${b.action==='new'?'可逐行修改变量名和程序段；重复名称不会自动改成奇怪后缀。':''}</div>
     <div id="qbatch-errors" class="q-preview-error" style="margin:10px 0"></div>
     <div class="q-preview-scroll"><table class="q-preview-table"><thead><tr><th>线号 / 图纸功能</th><th>${b.action==='new'?'将创建的变量名':'将执行的处理'}</th><th>${b.action==='new'?'放入程序段':'原变量 / 原表达式'}</th></tr></thead><tbody>
-    ${b.items.map(({task:t,draft:d},i)=>`<tr id="qbatch-row-${i}"><td><b>${esc(t.wire)}</b><div class="q-help">${esc(t.function)}</div><div id="qbatch-error-${i}" class="q-preview-error"></div></td>
+    ${b.items.map(({task:t,draft:d},i)=>`<tr id="qbatch-row-${i}"><td><b>${esc(t.wire||'（无线号）')}</b><div class="q-help">${esc(t.function)}</div><div id="qbatch-error-${i}" class="q-preview-error"></div></td>
       <td>${d.action==='new'?`<input aria-label="预览变量名 ${i+1}" value="${esc(d.values.var)}" oninput="Q_BATCH.items[${i}].draft.values.var=this.value;qUpdateBatchErrors()">`:esc(Q_ACTIONS[d.action])}</td>
       <td>${d.action==='new'?`<select aria-label="预览程序段 ${i+1}" onchange="Q_BATCH.items[${i}].draft.values.section=this.value;qUpdateBatchErrors()">${t.sections.map(s=>`<option value="${esc(s)}" ${s===d.values.section?'selected':''}>${esc(s)}</option>`).join('')}</select>`:`<span class="q-code">${esc(d.action==='source'?(t.sources||[]).find(s=>s.section===d.values.source?.section&&s.line===d.values.source?.line)?.raw||'':t.var||t.raw||'不修改表达式')}</span>`}</td></tr>`).join('')}</tbody></table></div>
     <div class="q-actions"><button id="qbatch-save" class="primary" onclick="qExecuteBatch(false)">保存这 ${b.items.length} 项</button><button id="qbatch-apply" onclick="qExecuteBatch(true)">保存并统一生成</button><span id="qbatch-progress">预览不会修改程序；生成时会再次校验映射及变量冲突。</span></div>`;

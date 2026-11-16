@@ -117,6 +117,17 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
                             'remark':d['review'].get('remark',''),'section':'','line':'','raw':'','score':0,
                             'note':'按用户处理排除此处图纸记录，未据此改动原程序'})
             continue
+        # I/O 表里没接线的空槽位：无线号、无功能文字、无地址。
+        # 旧流程 compare_io.py 对这类点标「备用/作废，程序未用」直接跳过；
+        # 通用识别保持同一口径，否则每页几个空通道会刷出几百条无意义的待判断。
+        # 只放行三者全空的行；有线号没功能、或有功能没线号都仍要报，不能误吞图纸错误。
+        if not d.get('wire') and not d.get('original_wire') and not d.get('function') \
+                and not d.get('address'):
+            results.append({**d,'status':'✅ 空通道/备用，程序未用','var':'','judge':'','remark':'',
+                            'section':'','line':'','raw':'','score':0,
+                            'note':'图纸该槽位未接线，无线号与功能文字，按备用点跳过',
+                            'problem_reason':''})
+            continue
         addr = d['address']
         candidates = by_old.get(addr['key'],[]) if addr else []
         p = candidates[0] if len(candidates)==1 else None
