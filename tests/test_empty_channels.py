@@ -40,10 +40,21 @@ class EmptyChannelTests(unittest.TestCase):
         self.assertEqual(len(questions), 1)
         self.assertIn('格式或功能文字不完整', results[0]['problem_reason'])
 
-    def test_wire_present_but_function_missing_still_needs_review(self):
+    def test_wire_present_function_empty_program_unused_is_spare(self):
+        """图纸功能空、程序也没在用 => 纯备用点，放行不占待判断"""
         a = parse_address('I-A01-00').to_dict()
         p = point(wire='I-A01-00', addr=a)
-        _, questions, _, _ = compare({'points': [p]}, [], {})
+        results, questions, _, _ = compare({'points': [p]}, [], {})
+        self.assertFalse(questions)
+        self.assertTrue(results[0]['status'].startswith('✅ 备用点'))
+
+    def test_wire_present_function_empty_program_in_use_still_needs_review(self):
+        """图纸功能空但程序仍在用（ID_x := 该地址）=> 必须人工确认，不能放行"""
+        a = parse_address('I-A01-00').to_dict()
+        p = point(wire='I-A01-00', addr=a)
+        row = {'address': a, 'var': 'ID_某按钮', 'simple': True, 'refs': 1,
+               'section': 'test', 'line': 1, 'raw': 'ID_某按钮 := I-A01-00;'}
+        results, questions, _, _ = compare({'points': [p]}, [row], {})
         self.assertEqual(len(questions), 1)
 
     def test_real_point_is_not_treated_as_empty_channel(self):

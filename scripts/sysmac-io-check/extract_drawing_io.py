@@ -69,6 +69,17 @@ def page_points(page, pno, words=None):
     sign = 1 if cat_c > func_c else -1
     func_lo = func_c - sign * 15
     func_hi = func_c + (cat_c - func_c) * 0.6
+    # 竖排功能格里一个点位常写成多列（如 A面涂布 / 站驱动侧 / 急停按钮），
+    # 最外一列可能超出上面按表头估的 15pt 边界，导致功能被截断成「A面涂布站驱动侧」。
+    # 按实际中文词的 b 坐标把功能带向远离类别侧扩展，但不得越过类别行。
+    zh_words = [w for w in words if re.search(r'[\u4e00-\u9fff]', w[4])]
+    beyond = [center(w)[b] for w in zh_words if sign * (center(w)[b] - func_c) < 0
+              and abs(center(w)[b] - func_c) < 40]
+    if beyond:
+        extreme = min(beyond) if sign > 0 else max(beyond)
+        func_lo = extreme - sign * 6
+    if sign * (func_hi - func_lo) < 12:
+        func_hi = func_lo + sign * 12
 
     def in_func_band(w):
         v = center(w)[b]

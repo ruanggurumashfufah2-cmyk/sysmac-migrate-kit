@@ -138,6 +138,15 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
             continue
         addr = d['address']
         candidates = by_old.get(addr['key'],[]) if addr else []
+        # 图纸功能格为空且旧程序这个地址也没在用 => 纯备用点，直接跳过。
+        # 若旧程序这个地址仍在用（有映射），则属于「图纸删了点、程序还在用」，
+        # 那是需要人工确认是否注释掉的改动，不能在这里放行。
+        if not d.get('function') and addr and not candidates:
+            results.append({**d,'status':'✅ 备用点：图纸功能为空，程序未用','var':'','judge':'',
+                            'remark':'','section':'','line':'','raw':'','score':0,
+                            'note':'图纸功能格为空，旧程序也没有对应映射，按备用点跳过',
+                            'problem_reason':''})
+            continue
         p = candidates[0] if len(candidates)==1 else None
         if addr and not candidates:
             meaning=(addr['scheme'],addr['kind'],addr['station'],semantic(d['function']))
