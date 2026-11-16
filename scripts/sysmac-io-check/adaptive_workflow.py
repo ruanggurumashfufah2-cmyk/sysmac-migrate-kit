@@ -25,7 +25,21 @@ ALIASES = [('OvenA','A面烘箱'),('OvenB','B面烘箱'),('NoseA','机头A'),('N
            ('ALM','报警'),('alarm','报警'),('热继','热继电器'),('热继电器器','热继电器'),
            ('控制温控表','温控表'),('监控温控表','温控表'),('船体升降','船体提升'),
            ('排风风机','排风机'),('维修侧','驱动侧'),('基准棍','基准辊'),
-           ('变频器','变频')]
+           ('变频器','变频'),('升降','提升')]
+
+
+def _shared_feature(func, var):
+    """功能名与变量名是否共享足够长的「功能实体」片段。
+
+    图纸常把功能写得很简/写错（「二层01#烘箱船体升降检测」），程序写全
+    （「B面烘箱船体提升主气缸上升位[1]」），整体相似度低但确实同义。
+    用语义归一后的最长公共子串判定：真对应通常是长的实体片段
+    （「烘箱船体提升」「变频启动信号」6 字），而假阳性只是工位名
+    （「机头A」3 字）或通用词（「信号名称」4 字）。阈值 5 字能干净区分。
+    """
+    a, b = semantic(func), semantic(var)
+    m = difflib.SequenceMatcher(None, a, b).find_longest_match(0, len(a), 0, len(b))
+    return m.size >= 5
 
 
 def _numbers(text):
@@ -70,6 +84,8 @@ def semantic(text):
     for a,b in ALIASES:
         s = s.replace(a,b)
     # 楼层中文 → 数字层；#写法与数组下标都归一成 #编号
+    # 注意不要把「一层/二层」映射成 A面/B面：functional_conflicts 会把
+    # A面/B面当成工位方向冲突，且楼层≠方向，映射会制造假冲突。
     s = s.replace('一层','1层').replace('二层','2层').replace('三层','3层')
     s = re.sub(r'\[(\d+)(?:[,\s]+(\d+))?\]',
                lambda m: '#' + m.group(1) + (('#' + m.group(2)) if m.group(2) else ''), s)
@@ -232,6 +248,15 @@ def compare(data, program, feedback, reviews=None, known_names=None, sections=No
             elif score >= .5 and p['simple'] and p['refs']==1 and p['address']['key']==addr['key']:
                 action = 'yellow'
                 reasons.append('相似度≥50%，按现有地址保留原表达式，标黄供浏览')
+            elif (p['simple'] and p['refs']==1 and p['address']['key']==addr['key']
+                  and _shared_feature(d['function'], p['var'])):
+                # 同一线号、旧程序该地址只有一条赋值，且功能名与变量名有
+                # 功能实体词重合（不是仅工位名重合）。此时线号本身已是强证据，
+                # 图纸常把功能写得很简/写错楼层（如「二层01#船体升降检测」对应
+                # 「B面烘箱船体提升主气缸上升位」），不该因命名差异判为待判断。
+                # 仍标黄并写明差异，供人工浏览确认。
+                action = 'yellow'
+                reasons.append('同线号唯一映射，功能名称写法不同，按图纸线号保留原表达式（标黄供核对）')
             else:
                 reasons.append('相似度不足50%或语句无法完整解析，需要判断')
         # Classification is about the underlying problem, not the last saved action.
